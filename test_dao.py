@@ -191,3 +191,31 @@ class TestCountryDao(TestCase):
         c = Country(name='澳大利亚', continent_id=4)
         s, ci = self.cd.insert(c)
         print_([s, ci])
+
+
+class TestTideDao(TestCase):
+    def setUp(self) -> None:
+        self.session = db_util.get_session()
+        self.td = TideDao(self.session)
+
+    def tearDown(self) -> None:
+        db_util.close_session(self.session)
+
+    def test_get_tide_by_pid_and_date(self):
+        self.fail()
+
+    def test__exist(self):
+        tide = Tide(pid=3,
+                    t=datetime(2020, 9, 13, 8, 39, 59),
+                    limit='[{"high": 36, "time": 20}, {"high": 32, "time": 21}]',
+                    data='[{"high": 36, "time": 3}, {"high": 32, "time": 18}]')
+        t = self.td._exist(tide)
+        print_(t)
+
+    def test_insert(self):
+        tide = Tide(pid=5,
+                    t=datetime(2020, 9, 13),
+                    limit='[{"high": 36, "time": 20}, {"high": 32, "time": 21}]',
+                    data='[{"high": 36, "time": 3}, {"high": 32, "time": 18}]')
+        r, i = self.td.insert(tide)
+        print(r, i.__dict__)

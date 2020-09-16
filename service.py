@@ -1,4 +1,3 @@
-from abc import ABCMeta
 from typing import List, Union, Tuple, TypeVar, Generic, Optional
 
 from dao import ContinentDao, CountryDao, ProvinceDao, PortDao, ChinaPortDao
@@ -9,7 +8,7 @@ T1 = TypeVar('T1')
 T2 = TypeVar('T2')
 
 
-class BaseService(Generic[T1, T2], metaclass=ABCMeta):
+class BaseService(Generic[T1, T2]):
 
     @staticmethod
     def insert_one(record: T2) -> Tuple[ExecState, T2]:

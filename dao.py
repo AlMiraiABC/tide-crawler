@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod, ABC
+from abc import abstractmethod, ABC
 from datetime import datetime
 from time import struct_time
 from typing import List, Union, Optional, Tuple, TypeVar, Generic
@@ -15,7 +15,7 @@ _TypeErrorInfo = 'Type Error: '
 T = TypeVar('T')
 
 
-class BaseDao(metaclass=ABCMeta, Generic[T]):
+class BaseDao(Generic[T]):
     def __init__(self, session: Session):
         self.session = session
 
@@ -28,7 +28,7 @@ class BaseDao(metaclass=ABCMeta, Generic[T]):
         r = self._exist(record)
         if r:
             return ExecState.EXIST, r
-        return self._insert(r), record
+        return self._insert(record), record
 
     @abstractmethod
     def _exist(self, record: T) -> T:
@@ -38,16 +38,17 @@ class BaseDao(metaclass=ABCMeta, Generic[T]):
         pass
 
     def _insert(self, entity: BaseTable) -> ExecState:
+        # noinspection PyBroadException
         try:
             self.session.add(entity)
             return ExecState.SUCCESS
-        except:
+        except Exception:
             return ExecState.FAIL
 
 
 class ProvinceDao(BaseDao[Province], ABC):
 
-    def get_all_province(self) -> List[T]:
+    def get_all_province(self) -> List[Province]:
         """
         获得所有省份(:class:`Province`)
 
@@ -74,21 +75,21 @@ class ProvinceDao(BaseDao[Province], ABC):
             return self._get_province_by_class(province)
         raise TypeError(f'{_TypeErrorInfo}[province]')
 
-    def _get_province_by_id(self, p_id: int) -> Optional[T]:
+    def _get_province_by_id(self, p_id: int) -> Optional[Province]:
         """根据 ``Province.id`` 获得 :class:`Province`"""
         if p_id:
-            p = self.session.query(T).get(p_id)
+            p = self.session.query(Province).get(p_id)
             return p
         return None
 
-    def _get_province_by_name(self, p_name: str) -> Optional[T]:
+    def _get_province_by_name(self, p_name: str) -> Optional[Province]:
         """根据 ``Province.name`` 获得 :class:`Province`"""
         if p_name:
-            p = self.session.query(T).filter(T.name == p_name).first()
+            p = self.session.query(Province).filter(Province.name == p_name).first()
             return p
         return None
 
-    def _get_province_by_class(self, p: T) -> Optional[T]:
+    def _get_province_by_class(self, p: Province) -> Optional[Province]:
         """使用 ``p.id`` 查找, 若 ``p.id`` 不可用则使用 ``p.name`` """
         if p:
             if p.id:
@@ -97,7 +98,7 @@ class ProvinceDao(BaseDao[Province], ABC):
                 return self._get_province_by_name(p.name)
         return None
 
-    def _exist(self, record: T) -> T:
+    def _exist(self, record: Province) -> Province:
         """
         当数据库中是否存在(:prop:`province.name`)
         """
@@ -111,16 +112,16 @@ class ProvinceDao(BaseDao[Province], ABC):
 
 class ContinentDao(BaseDao[Continent], ABC):
 
-    def get_all_continent(self) -> List[T]:
+    def get_all_continent(self) -> List[Continent]:
         """
         获得所有大洲(:class:`Continent`)
 
         :return: 所有大洲
         """
-        continents = self.session.query(T).all()
+        continents = self.session.query(Continent).all()
         return continents
 
-    def get_continent(self, continent: Union[int, str, Continent]) -> Optional[T]:
+    def get_continent(self, continent: Union[int, str, Continent]) -> Optional[Continent]:
         """
         根据 ``Continent.id`` or ``Continent.name`` or ``Continent`` 获得 :class:`Continent`
 
@@ -145,16 +146,16 @@ class ContinentDao(BaseDao[Continent], ABC):
             return c
         return None
 
-    def _get_continent_by_name(self, c_name: str) -> Optional[T]:
+    def _get_continent_by_name(self, c_name: str) -> Optional[Continent]:
         """根据 ``Continent.name`` 获得 :class:`Continent`"""
         if c_name:
-            c = self.session.query(T) \
+            c = self.session.query(Continent) \
                 .filter(Continent.name == c_name) \
                 .first()
             return c
         return None
 
-    def _get_continent_by_class(self, c: T) -> Optional[T]:
+    def _get_continent_by_class(self, c: Continent) -> Optional[Continent]:
         """使用 ``c.id`` 查找, 若 ``c.id`` 不可用则使用 ``c.name`` """
         if c:
             if c.id:
@@ -163,7 +164,7 @@ class ContinentDao(BaseDao[Continent], ABC):
                 return self._get_continent_by_name(c.name)
         return None
 
-    def _exist(self, record: T) -> T:
+    def _exist(self, record: Continent) -> Continent:
         if Value.is_any_none_or_empty([record, record.name]):
             raise ValueError(f'{_ValueErrorInfo}[continent, continent.name]')
         c = self.session.query(Continent) \
@@ -174,23 +175,23 @@ class ContinentDao(BaseDao[Continent], ABC):
 
 class PortDao(BaseDao[Port], ABC):
 
-    def _get_port_by_id(self, p_id: int) -> Optional[T]:
+    def _get_port_by_id(self, p_id: int) -> Optional[Port]:
         """根据 ``Port.id`` 获得 :class:`Port`"""
         if p_id:
-            p = self.session.query(T).get(p_id)
+            p = self.session.query(Port).get(p_id)
             return p
         return None
 
-    def _get_port_by_name(self, p_name: str) -> Optional[T]:
+    def _get_port_by_name(self, p_name: str) -> Optional[Port]:
         """根据 ``Port.name`` 获得 :class:`Port`"""
         if p_name:
-            p = self.session.query(T) \
+            p = self.session.query(Port) \
                 .filter(Port.name == p_name) \
                 .first()
             return p
         return None
 
-    def _get_port_by_class(self, p: T) -> Optional[T]:
+    def _get_port_by_class(self, p: Port) -> Optional[Port]:
         """使用 ``p.id`` 查找, 若 ``p.id`` 不可用则使用 ``p.name`` """
         if p:
             if p.id:
@@ -199,7 +200,7 @@ class PortDao(BaseDao[Port], ABC):
                 return self._get_port_by_name(p.name)
         return None
 
-    def get_ports_by_province(self, province: Union[int, str, Province]) -> List[T]:
+    def get_ports_by_province(self, province: Union[int, str, Province]) -> List[Port]:
         """
         根据省名 ``Province.name`` 获得该省的港口列表(:class:`Port`)
 
@@ -217,7 +218,7 @@ class PortDao(BaseDao[Port], ABC):
             return ports
         return []
 
-    def get_port(self, port: Union[int, str, Port]) -> Optional[T]:
+    def get_port(self, port: Union[int, str, Port]) -> Optional[Port]:
         """
         根据 ``Port.id`` or ``Port.name`` or ``Port`` 获得 :class:`Port`
 
@@ -236,7 +237,7 @@ class PortDao(BaseDao[Port], ABC):
         else:
             raise TypeError(f'{_TypeErrorInfo}[port]')
 
-    def get_ports_by_country(self, country: Union[int, str, Country]) -> List[T]:
+    def get_ports_by_country(self, country: Union[int, str, Country]) -> List[Port]:
         """
         根据国家名(`Country.name`)获得该国的港口列表(`Port`)
 
@@ -250,7 +251,7 @@ class PortDao(BaseDao[Port], ABC):
                 .all()
             return ports
 
-    def _exist(self, record: T) -> T:
+    def _exist(self, record: Port) -> Port:
         if Value.is_any_none_or_empty([record, record.name, record.country_id]):
             raise ValueError(f'{_ValueErrorInfo}[port, port.name, port.country_id]')
         r = self.session.query(Port) \
@@ -262,7 +263,7 @@ class PortDao(BaseDao[Port], ABC):
 
 class CountryDao(BaseDao[Country], ABC):
 
-    def _get_country_by_id(self, c_id: int) -> Optional[T]:
+    def _get_country_by_id(self, c_id: int) -> Optional[Country]:
         """根据 ``Country.id`` 获得 :class:`Country`"""
         if c_id:
             c = self.session.query(Country).get(c_id)
@@ -278,7 +279,7 @@ class CountryDao(BaseDao[Country], ABC):
             return c
         return None
 
-    def _get_country_by_class(self, c: T) -> Optional[T]:
+    def _get_country_by_class(self, c: Country) -> Optional[Country]:
         """使用 ``c.id`` 查找, 若 ``c.id`` 不可用则使用 ``c.name`` """
         if c:
             if c.id:
@@ -287,7 +288,7 @@ class CountryDao(BaseDao[Country], ABC):
                 return self._get_country_by_name(c.name)
         return None
 
-    def get_country(self, country: Union[int, str, Country]) -> Optional[T]:
+    def get_country(self, country: Union[int, str, Country]) -> Optional[Country]:
         """
         根据 ``Country.id`` or ``Country.name`` or ``Country`` 获得 :class:`Country`
 
@@ -315,7 +316,7 @@ class CountryDao(BaseDao[Country], ABC):
             return countries
         return []
 
-    def _exist(self, record: T) -> T:
+    def _exist(self, record: Country) -> Country:
         if Value.is_any_none_or_empty([record, record.name]):
             raise ValueError(f'{_ValueErrorInfo}[country, country.name]')
         r = self.session.query(Country) \
@@ -364,16 +365,9 @@ class TideDao(BaseDao[Tide], ABC):
             tides = rel.filter(Tide.t >= d).first()
         return tides
 
-    def _exist(self, record: T) -> T:
-        if Value.is_any_none_or_empty([record, record.pid, record.data, record.limit]):
+    def _exist(self, record: Tide) -> Tide:
+        if Value.is_any_none_or_empty([record, record.pid, record.data, record.limit, record.t]):
             raise ValueError(f'{_ValueErrorInfo}[tide, tide.pid, tide.data, tide.limit]')
-        # format :prop:`t`
-        if not record.t:
-            n = datetime.now()
-            t = datetime(n.year, n.month, n.day, n.hour)
-        else:
-            t = record.t
-        record.t = datetime(t.year, t.month, t.day, t.hour)
         r = self.session.query(Tide) \
             .filter(Tide.pid == record.pid) \
             .filter(Tide.t == record.t) \
@@ -383,7 +377,7 @@ class TideDao(BaseDao[Tide], ABC):
 
 class ChinaPortDao(BaseDao[ChinaPort], ABC):
 
-    def _exist(self, record: T) -> T:
+    def _exist(self, record: ChinaPort) -> ChinaPort:
         if Value.is_any_none_or_empty([record, record.province_id, record.pid]):
             raise ValueError(f'{_ValueErrorInfo}[cp, cp.province_id, cp.pid')
         r = self.session.query(ChinaPort) \
