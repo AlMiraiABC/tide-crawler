@@ -3,7 +3,7 @@ from enum import Enum, auto
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from config import Config
+from config import DatabaseSetting
 
 
 class ExecState(Enum):
@@ -20,11 +20,11 @@ class ExecState(Enum):
 
 class DbUtil:
     def __init__(self,
-                 host: str = Config.HOST,
-                 port: int = Config.PORT,
-                 username: str = Config.USERNAME,
-                 password: str = Config.PASSWORD,
-                 database: str = Config.DATABASE):
+                 host: str = DatabaseSetting.HOST,
+                 port: int = DatabaseSetting.PORT,
+                 username: str = DatabaseSetting.USERNAME,
+                 password: str = DatabaseSetting.PASSWORD,
+                 database: str = DatabaseSetting.DATABASE):
         self._engine_str = f'mysql+pymysql://{username}:{password}@{host}:{port}/{database}'
         self.engine = create_engine(self._engine_str)
         self.sessionFactory = sessionmaker(bind=self.engine)
@@ -34,10 +34,11 @@ class DbUtil:
 
     @staticmethod
     def close_session(session: Session) -> ExecState:
+        # noinspection PyBroadException
         try:
             session.commit()
             return ExecState.SUCCESS
-        except:
+        except Exception:
             session.rollback()
             return ExecState.FAIL
         finally:

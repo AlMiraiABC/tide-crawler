@@ -5,21 +5,21 @@ from typing import List, Union, Optional, Tuple, TypeVar, Generic
 
 from sqlalchemy.orm import Session
 
-from table import *
+from backend.table import *
 from util.db import db_util, ExecState
 from util.validate import Value
 
 _ValueErrorInfo = 'None or Empty values: '
 _TypeErrorInfo = 'Type Error: '
 
-T = TypeVar('T')
+_Dao = TypeVar('_Dao')
 
 
-class BaseDao(Generic[T]):
+class BaseDao(Generic[_Dao]):
     def __init__(self, session: Session):
         self.session = session
 
-    def insert(self, record: T) -> Tuple[ExecState, T]:
+    def insert(self, record: _Dao) -> Tuple[ExecState, _Dao]:
         """
         当数据库中未找到(根据self._exist()判断)时插入该省份信息
 
@@ -31,7 +31,7 @@ class BaseDao(Generic[T]):
         return self._insert(record), record
 
     @abstractmethod
-    def _exist(self, record: T) -> T:
+    def _exist(self, record: _Dao) -> _Dao:
         """
         :return: T if exist or else None
         """
@@ -54,10 +54,10 @@ class ProvinceDao(BaseDao[Province], ABC):
 
         :return: 所有大洲
         """
-        provinces = self.session.query(T).all()
+        provinces = self.session.query(_Dao).all()
         return provinces
 
-    def get_province(self, province: Union[int, str, Province]) -> Optional[T]:
+    def get_province(self, province: Union[int, str, Province]) -> Optional[_Dao]:
         """
         根据 ``Province.id`` or ``Province.name`` or ``Province`` 获得 :class:`Province`
 
@@ -104,7 +104,7 @@ class ProvinceDao(BaseDao[Province], ABC):
         """
         if Value.is_any_none_or_empty([record, record.name]):
             raise ValueError(f'{_ValueErrorInfo}[province, province.name]')
-        r = self.session.query(T) \
+        r = self.session.query(_Dao) \
             .filter(Continent.name == record.name) \
             .first()
         return r
@@ -135,7 +135,7 @@ class ContinentDao(BaseDao[Continent], ABC):
             return self._get_continent_by_id(continent)
         elif type(continent) == str:
             return self._get_continent_by_name(continent)
-        elif type(continent) == T:
+        elif type(continent) == _Dao:
             return self._get_continent_by_class(continent)
         raise TypeError(f'{_TypeErrorInfo}[continent]')
 
@@ -232,7 +232,7 @@ class PortDao(BaseDao[Port], ABC):
             return self._get_port_by_id(port)
         elif type(port) == str:
             return self._get_port_by_name(port)
-        elif type(port) == T:
+        elif type(port) == _Dao:
             return self._get_port_by_class(port)
         else:
             raise TypeError(f'{_TypeErrorInfo}[port]')
@@ -270,7 +270,7 @@ class CountryDao(BaseDao[Country], ABC):
             return c
         return None
 
-    def _get_country_by_name(self, c_name: str) -> Optional[T]:
+    def _get_country_by_name(self, c_name: str) -> Optional[_Dao]:
         """根据 ``Country.name`` 获得 :class:`Country`"""
         if c_name:
             c = self.session.query(Country) \
@@ -302,7 +302,7 @@ class CountryDao(BaseDao[Country], ABC):
             return self._get_country_by_id(country)
         elif type(country) == str:
             return self._get_country_by_name(country)
-        elif type(country) == T:
+        elif type(country) == _Dao:
             return self._get_country_by_class(country)
         else:
             raise TypeError(f'{_TypeErrorInfo}[country]')

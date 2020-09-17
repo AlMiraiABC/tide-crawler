@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from selector import Selector
+from crawler.selector import Selector
 
 
 class TestSelector(TestCase):

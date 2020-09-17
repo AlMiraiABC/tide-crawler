@@ -1,34 +1,34 @@
 from typing import List, Union, Tuple, TypeVar, Generic, Optional
 
-from dao import ContinentDao, CountryDao, ProvinceDao, PortDao, ChinaPortDao
-from table import *
+from backend.dao import ContinentDao, CountryDao, ProvinceDao, PortDao, ChinaPortDao
+from backend.table import *
 from util.db import db_util, ExecState
 
-T1 = TypeVar('T1')
-T2 = TypeVar('T2')
+_Dao = TypeVar('_Dao')
+_Table = TypeVar('_Table')
 
 
-class BaseService(Generic[T1, T2]):
+class BaseService(Generic[_Dao, _Table]):
 
-    @staticmethod
-    def insert_one(record: T2) -> Tuple[ExecState, T2]:
+    @classmethod
+    def insert_one(cls, record: _Table) -> Tuple[ExecState, _Table]:
         session = db_util.get_session()
-        s, r = T1(session).insert(record)
+        s, r = _Dao(session).insert(record)
         db_util.close_session(session)
         return s, r
 
-    @staticmethod
-    def insert_many(records: List[T2]) -> Tuple[List[T2], List[T2], List[T2]]:
+    @classmethod
+    def insert_many(cls, records: List[_Table]) -> Tuple[List[_Table], List[_Table], List[_Table]]:
         """
         插入多条记录
 
         :return: (ExecState.SUCCESS, ExecState.EXIST, ExecState.FAIL)
         """
-        successes: List[T2] = []
-        fails: List[T2] = []
-        exists: List[T2] = []
+        successes: List[_Table] = []
+        fails: List[_Table] = []
+        exists: List[_Table] = []
         for record in records:
-            s, r = BaseService.insert_one(record)
+            s, r = cls.insert_one(record)
             if s == ExecState.SUCCESS:
                 successes.append(r)
             elif s == ExecState.EXIST:
@@ -39,8 +39,8 @@ class BaseService(Generic[T1, T2]):
 
 
 class ContinentService(BaseService[ContinentDao, Continent]):
-    @staticmethod
-    def get_all_continent() -> List[Continent]:
+    @classmethod
+    def get_all_continent(cls) -> List[Continent]:
         """
         获取所有大洲(:class:`Continent`)信息
 
@@ -55,15 +55,15 @@ class ContinentService(BaseService[ContinentDao, Continent]):
 class CountryService(BaseService[CountryDao, Country]):
     china: Country = None
 
-    @staticmethod
-    def get_all_country_by_continent(continent: Union[int, str, Continent]) -> List[Country]:
+    @classmethod
+    def get_all_country_by_continent(cls, continent: Union[int, str, Continent]) -> List[Country]:
         session = db_util.get_session()
         ret = CountryDao(session).get_country_by_continent(continent)
         db_util.close_session(session)
         return ret
 
-    @staticmethod
-    def get_china(update: bool = False) -> Optional[Country]:
+    @classmethod
+    def get_china(cls, update: bool = False) -> Optional[Country]:
         if not CountryService.china or update:
             session = db_util.get_session()
             CountryService.china = CountryDao(session).get_country('中国')
@@ -72,9 +72,8 @@ class CountryService(BaseService[CountryDao, Country]):
 
 
 class ProvinceService(BaseService[ProvinceDao, Province]):
-
-    @staticmethod
-    def get_all_province() -> List[Province]:
+    @classmethod
+    def get_all_province(cls) -> List[Province]:
         session = db_util.get_session()
         ret = ProvinceDao(session).get_all_province()
         db_util.close_session(session)
@@ -82,22 +81,22 @@ class ProvinceService(BaseService[ProvinceDao, Province]):
 
 
 class PortService(BaseService[PortDao, Port]):
-    @staticmethod
-    def get_all_port_by_country(country: Country) -> List[Port]:
+    @classmethod
+    def get_all_port_by_country(cls, country: Country) -> List[Port]:
         session = db_util.get_session()
         ret = PortDao(session).get_ports_by_country(country)
         db_util.close_session(session)
         return ret
 
-    @staticmethod
-    def get_all_port_by_province(province: Province) -> List[Port]:
+    @classmethod
+    def get_all_port_by_province(cls, province: Province) -> List[Port]:
         session = db_util.get_session()
         ret = PortDao(session).get_ports_by_province(province)
         db_util.close_session(session)
         return ret
 
-    @staticmethod
-    def insert_one(record: T2, province: Union[int, str, Province] = None) -> Tuple[ExecState, T2]:
+    @classmethod
+    def insert_one(cls, record: _Table, province: Union[int, str, Province] = None) -> Tuple[ExecState, _Table]:
         """
         插入一条港口记录
         当是中国(record.country_id是中国的id)的港口时， ``province`` 不得为空；

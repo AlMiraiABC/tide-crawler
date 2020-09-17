@@ -1,7 +1,7 @@
 from typing import List, Union, Iterable
 from unittest import TestCase
 
-from table import *
+from backend.table import *
 from util.db import DbUtil
 
 db_util = DbUtil()

@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
-from get_tide import GetTide
+from crawler.get_tide import GetTide
 
 
 class TestGetTide(TestCase):
