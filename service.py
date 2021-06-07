@@ -1,8 +1,8 @@
 from typing import List, Union, Tuple, TypeVar, Generic, Optional
 
-from backend.dao import ContinentDao, CountryDao, ProvinceDao, PortDao, ChinaPortDao
-from backend.table import *
-from util.db import db_util, ExecState
+from db.dao import ContinentDao, CountryDao, ProvinceDao, PortDao, ChinaPortDao
+from db.entity import *
+from db.db import db_util, ExecState
 
 _Dao = TypeVar('_Dao')
 _Table = TypeVar('_Table')

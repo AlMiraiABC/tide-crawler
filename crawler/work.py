@@ -1,7 +1,6 @@
 from typing import List
 
-from backend.service import ContinentService, CountryService
-from backend.table import *
+from service import ContinentService, CountryService
 from crawler.selector import Selector
 
 

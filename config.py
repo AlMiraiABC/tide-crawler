@@ -2,10 +2,10 @@ import logging
 
 
 class DatabaseSetting:
-    HOST: str = '182.92.206.138'
+    HOST: str = 'db.nmtsoft.net'
     PORT: int = 3306
-    USERNAME: str = 'tide'
-    PASSWORD: str = 'tide'
+    USERNAME: str = 'tide_root'
+    PASSWORD: str = 'os)3zaaK4Z_rq?}_'
     DATABASE: str = 'tide'
     CHARSET: str = 'utf8'
 

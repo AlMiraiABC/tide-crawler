@@ -1,7 +1,7 @@
 from typing import Iterable
 from unittest import TestCase
 
-from backend.dao import *
+from db.dao import *
 
 
 def print_(info: Union[Iterable[object], object]):
