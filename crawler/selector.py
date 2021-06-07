@@ -124,35 +124,3 @@ class PortInfo:
         self.longitude = longitude
         self.datum = datum
         self.zone = zone
-
-#
-# if __name__ == '__main__':
-#     port_list = []
-#     # '亚洲','北美洲', '南美洲', '大洋洲', '南极洲', '非洲', '欧洲'
-#     # 洲名
-#     continents = ['亚洲', '北美洲', '南美洲', '大洋洲', '南极洲', '非洲', '欧洲']
-#     for continent in continents:
-#         countries = Selector.get_countries(continent)
-#         for country in countries:  # 遍历国家
-#             if country == "中国":
-#                 print("********" + country + "***********")
-#                 provinces = Selector.get_china_provinces()
-#                 for province in provinces:
-#                     print("%%%%%%%%%%%%%%" + province + "%%%%%%%%%%%%%%%%")
-#                     ports = get_china_province_ports(province)
-#                     for port_name in ports:
-#                         port = {}
-#                         port_id = get_port_id(port_name)
-#                         port['name'] = port_name
-#                         port['id'] = port_id
-#                         port_list.append(port)
-#             else:
-#                 print("********" + country + "***********")
-#                 ports = get_other_countries_ports(country)
-#                 for port_name in ports:
-#                     port = {}
-#                     port_id = get_port_id(port_name)
-#                     port['name'] = port_name
-#                     port['id'] = port_id
-#                     port_list.append(port)
-#     print(port_list)
