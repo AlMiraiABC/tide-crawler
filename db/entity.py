@@ -1,6 +1,10 @@
+"""
+table definitions for structured dataset
+"""
+
 from abc import ABC
 
-from sqlalchemy import Column, Integer, String, DateTime, Date, JSON
+from sqlalchemy import JSON, Column, Date, DateTime, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -11,7 +15,8 @@ class BaseTable(__BaseTable, ABC):
     id = Column('id', Integer, primary_key=True)
     name = Column('name', String(20), unique=True)
     cxb_id = Column('cxb_id', Integer, nullable=True)
-    create_time = Column('create_time', DateTime, server_default="CURRENT_TIMESTAMP(3)")
+    create_time = Column('create_time', DateTime,
+                         server_default="CURRENT_TIMESTAMP(3)")
     update_time = Column('update_time', DateTime, server_default="CURRENT_TIMESTAMP(3)",
                          server_onupdate="CURRENT_TIMESTAMP(3)")
 

@@ -3,18 +3,19 @@ from enum import Enum, auto
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from config import DatabaseSetting
+from config import DatabaseSetting, LeanCloudSetting
+import leancloud
 
 
 class ExecState(Enum):
-    """执行结果的状态"""
-    # 成功，用于CRD
+    """execute result"""
+    # execute successfully, used for CRD
     SUCCESS = auto()
-    # 已存在，用于C
+    # record already exists, used for C
     EXIST = auto()
-    # 不存在，用于D
+    # record does not exist, used for D
     UN_EXIST = auto()
-    # 失败，用于CRD
+    # execute failed, used for CRD
     FAIL = auto()
 
 
@@ -22,18 +23,27 @@ class DbUtil:
     """
     util for database to manage connections/sessions
     """
-    def __init__(self,
-                 host: str = DatabaseSetting.HOST,
-                 port: int = DatabaseSetting.PORT,
-                 username: str = DatabaseSetting.USERNAME,
-                 password: str = DatabaseSetting.PASSWORD,
-                 database: str = DatabaseSetting.DATABASE):
+
+    def __init__(self, **kwargs):
         """
         init database connection, create engine and sessionFactory.
+
         Please use :class:`DatabaseSetting` to set params
+
+        See also
+        ------
+        https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls
         """
-        self._engine_str = f'mysql+pymysql://{username}:{password}@{host}:{port}/{database}'
-        self.engine = create_engine(self._engine_str)
+        dialect: str = DatabaseSetting.DIALECT or 'mysql'
+        driver: str = '+'+DatabaseSetting.DRIVER if DatabaseSetting.DRIVER else ''
+        host: str = DatabaseSetting.HOST or 'localhost'
+        port: str = ':'+DatabaseSetting.PORT if DatabaseSetting.PORT else ''
+        username: str = DatabaseSetting.USERNAME or 'root'
+        password: str = DatabaseSetting.PASSWORD or 'root'
+        database: str = DatabaseSetting.DATABASE or 'tide'
+        self._engine_str = f'{dialect}{driver}://{username}:{password}@{host}{port}/{database}'
+        self.engine = create_engine(
+            self._engine_str, **DatabaseSetting.KWARGS, **kwargs)
         self.sessionFactory = sessionmaker(bind=self.engine)
 
     def get_session(self) -> Session:
@@ -59,3 +69,46 @@ class DbUtil:
 
 
 db_util = DbUtil()
+
+
+class LCUtil:
+    """
+    util for LeanCloud
+    """
+
+    def __init__(self) -> None:
+        """
+        create connection to leancloud data storage and login with config
+
+        Please use :class:`LeanCloudSetting` to set params
+
+        See also
+        ------
+        https://leancloud.cn/docs/sdk_setup-python.html#hash20935048
+        """
+        id = LeanCloudSetting.APP_ID
+        key = LeanCloudSetting.APP_KEY if LeanCloudSetting.APP_KEY else LeanCloudSetting.MASTER_KEY
+        leancloud.init(id, key)
+        self.login()
+
+    def login(username=LeanCloudSetting.SPIDER_USERNAME, password=LeanCloudSetting.SPIDER_PASSWORD) -> None:
+        """
+        login with a special User which has auths to create, delete, find, get, update
+
+        See also
+        ------
+        https://leancloud.cn/docs/leanstorage_guide-python.html#hash964666
+        """
+        user = leancloud.User()
+        user.login(username, password)
+
+    def logout() -> None:
+        """
+        logout current User. Use :function:`LCUtil.login` to re-login
+
+        See also
+        ------
+        https://leancloud.cn/docs/leanstorage_guide-python.html#hash748191977
+        """
+        user = leancloud.User.get_current()
+        user and user.logout()
