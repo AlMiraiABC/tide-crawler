@@ -6,7 +6,7 @@ from typing import Optional
 class Storages(Enum):
     """storage engines, where to save data"""
     LEAN_CLOUD = auto()
-    MYSQL = auto()
+    DATABASE = auto()
 
 
 # select storage engine

@@ -90,7 +90,7 @@ class LCUtil:
         leancloud.init(id, key)
         self.login()
 
-    def login(username=LeanCloudSetting.SPIDER_USERNAME, password=LeanCloudSetting.SPIDER_PASSWORD) -> None:
+    def login(self, username=LeanCloudSetting.SPIDER_USERNAME, password=LeanCloudSetting.SPIDER_PASSWORD) -> None:
         """
         login with a special User which has auths to create, delete, find, get, update
 
@@ -102,7 +102,7 @@ class LCUtil:
             return
         leancloud.User().login(username, password)
 
-    def logout() -> None:
+    def logout(self) -> None:
         """
         logout current User. Use :function:`LCUtil.login` to re-login
 
