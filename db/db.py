@@ -1,10 +1,9 @@
 from enum import Enum, auto
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-
-from config import DatabaseSetting, LeanCloudSetting
 import leancloud
+from config import STORAGE, DatabaseSetting, LeanCloudSetting, Storages
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 
 class ExecState(Enum):
@@ -68,7 +67,7 @@ class DbUtil:
             session.close()
 
 
-db_util = DbUtil()
+db_util = DbUtil() if STORAGE == Storages.DATABASE else None
 
 
 class LCUtil:
@@ -99,8 +98,9 @@ class LCUtil:
         ------
         https://leancloud.cn/docs/leanstorage_guide-python.html#hash964666
         """
-        user = leancloud.User()
-        user.login(username, password)
+        if leancloud.User.get_current() is not None:
+            return
+        leancloud.User().login(username, password)
 
     def logout() -> None:
         """
@@ -112,3 +112,6 @@ class LCUtil:
         """
         user = leancloud.User.get_current()
         user and user.logout()
+
+
+lc_util = LCUtil() if STORAGE == Storages.LEAN_CLOUD else None
