@@ -13,13 +13,13 @@ class TideBase:
 class TideData(TideBase):
     """潮汐数据"""
 
-    def __init__(self, time: time, high: float):
+    def __init__(self, time: time, height: float):
         """
         :param time: 时间
-        :param high: 潮高
+        :param height: 潮高
         """
         self.time = time
-        self.high = high
+        self.height = height
 
 
 class TideDay(List[TideData], TideBase):

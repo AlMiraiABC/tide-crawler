@@ -4,16 +4,24 @@ from typing import Optional
 
 
 class Storages(Enum):
-    """storage engines, where to save data"""
-    LEAN_CLOUD = auto()
-    DATABASE = auto()
+    """Storage engines, where to save data"""
+    LEAN_CLOUD = auto()  # leancloud storage https://www.leancloud.cn/storage/
+    RDB = auto()  # Relational Database
 
 
-# select storage engine
+class Crawlers(Enum):
+    """Crawler engines, where data come from"""
+    CXB = auto()  # https://www.chaoxibiao.net/
+    CNSS = auto()  # https://www.cnss.com.cn/tide/
+    NMDIS = auto()  # http://mds.nmdis.org.cn/pages/tidalCurrent.html
+
+
 STORAGE: Storages = Storages.LEAN_CLOUD
 
+CRAWLER: Crawlers = Crawlers.NMDIS
 
-class LeanCloudSetting:
+
+class LCSetting:
     """
     settings to connect [LeanCloud Data Storage](https://console.leancloud.cn/apps/{AppId}/storage/data)
     """
@@ -23,17 +31,17 @@ class LeanCloudSetting:
     # `APP_KEY` and `MASTER_KEY` cannot be empty or none at the same time
     MASTER_KEY: Optional[str] = None
     # username of spider in class _User
-    SPIDER_USERNAME='spider'
+    USERNAME = 'spider'
     # password of spider in class _User
-    SPIDER_PASSWORD='TideSpider'
+    PASSWORD = 'TideSpider'
     # logging level, will print log to console window
     # please close this when in prod env.
     DEBUG_LEVEL = logging.DEBUG
 
 
-class DatabaseSetting:
+class RDBSetting:
     """
-    settings to connect structured database
+    settings to connect relational database
 
     See also
     ------

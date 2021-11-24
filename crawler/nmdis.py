@@ -6,7 +6,7 @@ import requests
 from config import HEADERS
 from util.logger import Logger
 
-from crawler.model.tide import TideData, TideDay, TideInfo, TideLimit
+from db.tide import TideData, TideDay, TideInfo, TideLimit
 
 
 class Nmdis:

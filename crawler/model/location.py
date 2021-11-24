@@ -1,8 +1,11 @@
-"""Models for port"""
+"""Models for location"""
+from crawler.model.base import BaseModel
 
-class PortInfo:
+
+class PortInfo(BaseModel):
     """港口信息"""
-    def __init__(self, area_id: str, port_id: str, latitude: float, longitude: float, name: str):
+
+    def __init__(self, area_id: str, port_id: str, latitude: float, longitude: float, name: str, raw: str = ''):
         """
         :param area_id: Location area id of port. Foreign key to :class:`AreaInfo`
         :param port_id: Id of port
@@ -15,6 +18,13 @@ class PortInfo:
         self.longitude = longitude
         self.areaId = area_id
         self.name = name
+        self.raw = raw
 
-class AreaInfo:
+
+class AreaInfo(BaseModel):
     """地区信息"""
+
+    def __init__(self, id: str, name, raw: str = '') -> None:
+        self.id = id
+        self.name = name
+        self.raw = raw
