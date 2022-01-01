@@ -1,4 +1,6 @@
-from typing import _T, Type
+from typing import Type, TypeVar
+
+_T = TypeVar("_T")
 
 
 class Singleton(object):

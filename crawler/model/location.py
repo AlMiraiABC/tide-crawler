@@ -24,7 +24,7 @@ class PortInfo(BaseModel):
 class AreaInfo(BaseModel):
     """地区信息"""
 
-    def __init__(self, id: str, name, raw: str = '') -> None:
+    def __init__(self, id: str, name: str, raw: str = '') -> None:
         self.id = id
         self.name = name
         self.raw = raw

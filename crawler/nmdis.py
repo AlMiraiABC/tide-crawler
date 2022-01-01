@@ -3,10 +3,10 @@ from datetime import date, time
 from typing import Any, Dict, Tuple, Union
 
 import requests
-from config import HEADERS
+from config import Headers
 from util.logger import Logger
 
-from db.tide import TideData, TideDay, TideInfo, TideLimit
+from crawler.model.tide import Tide, TideData, TideDay, TideLimit
 
 
 class Nmdis:
@@ -17,7 +17,7 @@ class Nmdis:
     def __init__(self) -> None:
         self.logger = Logger(self.__class__.__name__).logger
 
-    def get_tide(self, port_code: str, query_date: date) -> Tuple[TideLimit, TideDay, TideInfo]:
+    def get_tide(self, port_code: str, query_date: date) -> Tide:
         """
         查询某天24h的潮高、极值、其他信息
 
@@ -31,7 +31,7 @@ class Nmdis:
             'serchdate': query_date.strftime('%Y-%m-%d'),  # yyyy-MM-dd
             'sitecode': port_code
         }
-        response = requests.post(url=url, headers=HEADERS, json=reqbody)
+        response = requests.post(url=url, headers=Headers, json=reqbody)
         # region verify
         if response.status_code != 200:
             self.logger.error(f"{response.status_code}<{response.text}>")
@@ -46,7 +46,7 @@ class Nmdis:
         # region get tide infos
         datum = self.__get_datum(data.get('benchmark'))
         zone: str = data.get('timearea')
-        info = TideInfo(datum, zone)
+        return Tide(day, limit, zone, datum, port_code, query_date)
         # endregion
         return limit, day, info
 
@@ -69,6 +69,6 @@ class Nmdis:
     def __get_tide_data(self, data: Dict[str, Union[int, str]]) -> Tuple[TideDay, TideLimit]:
         day = [TideData(time(re.search('\d+', k).group()), v)
                for k, v in data.items() if re.match('a\d+', k)]
-        limit = [TideData(time.fromisoformat(data.get(f'cs{re.search("\d+",k).group()}')), v)
+        limit = [TideData(time.fromisoformat(data.get('cs'+re.search("\\d+", k).group())), v)
                  for k, v in data.items() if re.match('cg\d+', k)]
         return day, limit

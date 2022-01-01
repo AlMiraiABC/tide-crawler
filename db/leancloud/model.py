@@ -42,14 +42,14 @@ class __BaseClazz(leancloud.Object):
 
 class __WithInfo(__BaseClazz):
     NAME = 'name'
-    RID = 'Id'
+    RID = 'RId'
 
     @property
     def rid(self) -> Optional[str]:
         return self.get(__WithInfo.RID)
 
     @rid.setter
-    def cxbId(self, value: str):
+    def rid(self, value: str):
         return self.set(__WithInfo.RID, value)
 
     @property
@@ -66,20 +66,42 @@ class Area(__WithInfo):
 
 
 class Port(__WithInfo):
-    pass
+    AREA = 'area'
+    LATITUDE = 'latitude'
+    LONGITUDE = 'longitude'
+
+    @property
+    def area(self) -> Area:
+        return self.get(Port.AREA)
+
+    @area.setter
+    def area(self, area: Area):
+        return self.set(Port.AREA, area)
+
+    @property
+    def latitude(self) -> float:
+        return self.get(Port.LATITUDE)
+
+    @latitude.setter
+    def latitude(self, value: float):
+        return self.set(Port.LATITUDE, value)
+
+    @property
+    def longitude(self) -> float:
+        return self.get(Port.LONGITUDE)
+
+    @longitude.setter
+    def longitude(self, value: float):
+        return self.set(Port.LONGITUDE, value)
 
 
 class TideItem:
     TIME = 'time'
     HEIGHT = 'height'
 
-    def __init__(self, time: datetime.datetime, height: float) -> None:
+    def __init__(self, time: datetime.time, height: float) -> None:
         self.time = time
         self.height = height
-
-
-__TideItemDict = Dict[str, float]
-__TideItemDicts = List[__TideItemDict]
 
 
 class Tide(__BaseClazz):
@@ -87,21 +109,23 @@ class Tide(__BaseClazz):
     LIMIT = 'limit'
     PORT = 'port'
     DATE = 'date'
+    ZONE = 'zone'
+    DATUM = 'datum'
 
     @property
-    def day(self) -> __TideItemDicts:
+    def day(self) -> List[Dict[str, float]]:
         return self.get(Tide.DAY)
 
     @day.setter
-    def h24(self, value: __TideItemDicts):
+    def day(self, value: List[Dict[str, float]]):
         return self.set(Tide.DAY, value)
 
     @property
-    def limit(self) -> __TideItemDicts:
+    def limit(self) -> List[Dict[str, float]]:
         return self.get(Tide.LIMIT)
 
     @limit.setter
-    def limit(self, value: __TideItemDicts):
+    def limit(self, value: List[Dict[str, float]]):
         return self.set(Tide.LIMIT, value)
 
     @property
@@ -110,20 +134,36 @@ class Tide(__BaseClazz):
 
     @port.setter
     def port(self, value: Port):
-        return self.set(Tide.DISTRICT, value)
+        return self.set(Tide.PORT, value)
 
     @property
-    def date(self):
+    def date(self) -> datetime.datetime:
         return self.get(Tide.DATE)
 
     @date.setter
-    def date(self, value: str):
+    def date(self, value: datetime.datetime):
         return self.set(Tide.DATE, value)
 
+    @property
+    def zone(self) -> str:
+        return self.get(Tide.ZONE)
+
+    @zone.setter
+    def zone(self, value: str):
+        return self.set(Tide.LIMIT, value)
+
+    @property
+    def datum(self) -> float:
+        return self.get(Tide.DATUM)
+
+    @datum.setter
+    def datum(self, value: float):
+        return self.set(Tide.DATUM, value)
+
     @staticmethod
-    def to_dict(items: List[TideItem]) -> __TideItemDicts:
+    def to_dict(items: List[TideItem]) -> List[Dict[str, float]]:
         return [item.__dict__ for item in items]
 
     @staticmethod
-    def to_item(dicts: __TideItemDicts) -> List[TideItem]:
+    def to_item(dicts: List[Dict[str, float]]) -> List[TideItem]:
         return [Tide(d[TideItem.TIME], d[TideItem.HEIGHT]) for d in dicts]
