@@ -1,3 +1,5 @@
+"""Common definitions for DAO."""
+
 from enum import Enum, auto
 
 

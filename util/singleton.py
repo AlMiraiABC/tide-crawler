@@ -3,6 +3,7 @@ from typing import Type, TypeVar
 _T = TypeVar("_T")
 
 
+# TODO set *args, **kwargs to create instance.
 class Singleton(object):
     _instance = None
 

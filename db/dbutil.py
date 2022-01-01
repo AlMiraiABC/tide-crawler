@@ -13,7 +13,11 @@ from db.rdb.rdb_util import RDBUtil
 
 
 class DbUtil(BaseDbUtil):
+    """Wrapper for all DAOs"""
+
     def __init__(self) -> None:
+        """Create a new dbutil instance. Please use `dbutil.db_util` as usual."""
+        # TODO return db_util if has been created
         self.db_util: BaseDbUtil = None
         if STORAGE == Storages.LEAN_CLOUD:
             self.db_util = LCUtil()

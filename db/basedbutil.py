@@ -9,6 +9,8 @@ from db.common import ExecState
 
 
 class BaseDbUtil(ABC):
+    """DAO base class"""
+
     @abstractmethod
     def open(self):
         """Open a connection or reopen a new connection if it closed."""
