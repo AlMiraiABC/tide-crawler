@@ -1,18 +1,16 @@
-from datetime import date
-from typing import List, Optional
+from datetime import date, datetime, timedelta
+from typing import Callable, List, Optional
 
 from config import LCSetting
-from crawler.model.location import AreaInfo, PortInfo
-from crawler.model.tide import Tide, TideDay, TideLimit
-from db.common import ExecState
 from db.basedbutil import BaseDbUtil
-from db.leancloud.model import Area, Port
-from db.leancloud.model import Tide as LCTide
-from db.leancloud.model import TideItem
+from db.common import ExecState
+from db.leancloud.lc_model import LCArea, LCPort, LCTide
+from db.model import Area, BaseClazz, Port, Tide
 from util.logger import Logger
 
 import leancloud
 from leancloud.errors import LeanCloudError
+from leancloud.object_ import Object
 from leancloud.query import Query
 
 
@@ -70,132 +68,138 @@ class LCUtil(BaseDbUtil):
         user = leancloud.User.get_current()
         user and user.logout()
 
-    def add_area(self, area: AreaInfo) -> ExecState:
+    def try_insert(self, obj: BaseClazz, query: Query, save: Callable[[Object, Object]], name: str):
+        """
+        Try to insert :param:`obj`, or update if exists.
 
-        def save():
-            exist.raw = area.raw
-            exist.name = area.name
-            exist.rid = area.id
-            exist.save()
-
-        query: Query = Area.query
-        exist: Area = None
+        :param obj: Insert value.
+        :param query: Try to get exists object.
+        :param save: Save :param:`obj` or update exists object which get from :param:`query`
+                `(queried, obj) -> None`
+        :param name: obj's friendly name.
+        """
         try:
-            if not area.name or area.name.isspace():
-                raise AttributeError("area name cannot be null or empty")
-            exist = query.equal_to(Area.NAME, area.name).first()
-            save()  # update
-            return ExecState.UPDATE
+            o: Object = query.first()
+            save(o, obj)
+            self.logger.debug(f"update {name} {o.id} successfully.")
+            return ExecState.UPDATE, o
         except LeanCloudError as ex:
-            if ex.code == 101:  # not exist
-                exist = area
+            if ex.code == 101:
                 try:
-                    save()  # create
-                    return ExecState.CREATE
-                except Exception as e:  # create err
-                    self.logger.error(f"create area {area.name} failed. {e}",
+                    save(None, obj)
+                    self.logger.debug(
+                        f"create new {name} {obj.id} successfully.")
+                    return ExecState.CREATE, o
+                except Exception as err:  # create err
+                    self.logger.error(f"create {name} failed {obj.__dict__}. {err}",
                                       exc_info=True, stack_info=True)
-                    return ExecState.FAIL
-            self.logger.error(f"update area {area.name} failed. {ex}",  # others errcode
+                    return ExecState.FAIL, None
+                # endregion
+            self.logger.error(f"add {name} failed {obj.__dict__}. {ex}",  # others errcode
                               exc_info=True, stack_info=True)
-            return ExecState.FAIL
-        except Exception as e:  # others err
-            self.logger.error(f"update area {area.name} failed. {e}",
+            return ExecState.FAIL, None
+        except Exception as err:  # others err
+            self.logger.error(f"add {name} failed {obj.__dict__}. {err}",
                               exc_info=True, stack_info=True)
-            return ExecState.FAIL
+            return ExecState.FAIL, None
 
-    def add_port(self, port: PortInfo) -> ExecState:
-        def save():
-            exist.raw = port.raw
-            exist.name = port.name
-            exist.rid = port.id
-            exist.save()
+    def add_area(self, area: Area) -> ExecState:
+        def save(o: Object, _):
+            o = LCArea() if o is None else o
+            o.raw = area.raw
+            o.name = area.name
+            o.rid = area.rid
+            o.save()
 
-        query: Query = Port.query
-        exist: Port = None
-        try:
-            exist = query.equal_to(Port.NAME, port.name).first()
-            save()  # update
-            return ExecState.UPDATE
-        except LeanCloudError as ex:
-            if ex.code == 101:  # not exist
-                exist = PortInfo()
-                try:
-                    save()  # create
-                    return ExecState.CREATE
-                except Exception as e:  # create err
-                    self.logger.error(f"create port {port.name} failed. {e}",
-                                      exc_info=True, stack_info=True)
-                    return ExecState.FAIL
-            self.logger.error(f"update port {port.name} failed. {ex}",  # others errcode
-                              exc_info=True, stack_info=True)
-            return ExecState.FAIL
-        except Exception as e:  # others err
-            self.logger.error(f"update area {port.name} failed. {e}",
-                              exc_info=True, stack_info=True)
-            return ExecState.FAIL
+        query: Query = LCArea.query
+        return self.try_insert(area, query.equal_to(LCArea.NAME, area.name), save, 'area')
 
-    def add_tide(self, day: TideDay, limit: TideLimit, port_id: str, zone: str = "+8:00", datum: float = 0, date: date = ...) -> ExecState:
-        dc = [TideItem(d.time, d.height) for d in day]
-        lc = [TideItem(l.time, l.height) for l in limit]
-        tc = Tide()
-        tc.day = dc
-        tc.limit = lc
-        tc.date = date
-        tc.datum = datum
-        tc.zone = zone
-        port_query: Query = Port.query
-        port: Port = None
+    def add_port(self, port: Port) -> ExecState:
+        def save(o: Object, _):
+            o = LCPort() if o is None else o
+            o.raw = port.raw
+            o.name = port.name
+            o.rid = port.rid
+            o.geopoint = port.geopoint if type(port.geopoint) == leancloud.GeoPoint else leancloud.GeoPoint(
+                port.geopoint[0], port.geopoint[1])
+            o.area = area
+            o.save()
+
+        area: LCArea = LCArea()
+        # region get area
         try:
-            port = port_query.equal_to(Port.RID, port_id).first()
-            tc.port = port
-        except LeanCloudError as ex:
-            self.logger.error(
-                f"port {port_id} not exist {ex}", exc_info=True, stack_info=True)
-            return ExecState.FAIL
-        try:
-            tc.save()
-            return ExecState.CREATE
+            area = LCArea.query.equal_to(
+                LCArea.rid, port.area.rid).first()
         except Exception as ex:
             self.logger.error(
-                f"tide {port_id}/{date.isoformat()} create failed")
+                f"add port area {port.area.rid} not found. {ex}", exc_info=True, stack_info=True)
+            raise AttributeError(f"area {port.area_id} doesn't exist.")
+        # endregion
+        query: Query = LCPort.query
+        return self.try_insert(port, query.equal_to(LCPort.rid, port.rid), save, 'port')
 
-    def get_area(self, area_id: str) -> Optional[AreaInfo]:
-        query: Query = Area.query
+    def add_tide(self, tide: Tide) -> ExecState:
+        port: LCPort = LCPort()
+        t: LCTide = LCTide()
         try:
-            area: Area = query.equal_to(Area.RID, area_id).first()
-            return AreaInfo(area.rid, area.name, area.raw)
+            port_query: Query = LCPort.query
+            port = port_query.equal_to(LCPort.RID, tide.port_id).first()
         except Exception as ex:
-            self.logger.error(f"get area {area_id} failed. {ex}",
+            self.logger.error(
+                f"add tide port {tide.port_id} not found. {ex}", exc_info=True, stack_info=True)
+            raise AttributeError(f"port {tide.port_id} doesn't exist")
+        try:
+            t.port = port
+            t.date = tide.date
+            t.datum = tide.datum
+            t.zone = tide.zone
+            t.day = tide.day
+            t.save()
+            self.logger.debug(f"add tide {t.objectId} successfully.")
+            return ExecState.CREATE, t
+        except Exception as ex:
+            self.logger.error(
+                f"tide {tide} create failed. {ex}", exc_info=True, stack_info=True)
+            return ExecState.FAIL, None
+
+    def get_area(self, area_rid: str) -> Optional[Area]:
+        query: Query = LCArea.query
+        try:
+            area: LCArea = query.equal_to(LCArea.RID, area_rid).first()
+            return area
+        except Exception as ex:
+            self.logger.error(f"get area {area_rid} failed. {ex}",
                               exc_info=True, stack_info=True)
             return None
 
-    def get_port(self, port_id: str = None) -> Optional[PortInfo]:
-        query: Query = Port.query
+    def get_port(self, port_rid: str = None) -> Optional[Port]:
+        query: Query = LCPort.query
         try:
-            port: Port = query.equal_to(
-                Port.RID, port_id).include(Area.__name__).first()
-            return PortInfo(port.area.rid, port.rid, port.latitude, port.longitude, port.name, port.raw)
+            port: LCPort = query.equal_to(
+                LCPort.RID, port_rid).include(LCArea).first()
+            return port
         except Exception as ex:
-            self.logger.error(f"get port {port_id} failed. {ex}",
+            self.logger.error(f"get port {port_rid} failed. {ex}",
                               exc_info=True, stack_info=True)
             return None
 
-    def get_tide(self, port_id: str, date: date) -> Optional[Tide]:
+    def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
         query: Query = Tide.query
+        dt = datetime(d.year, d.month, d.day)
         try:
-            tide: LCTide = query.equal_to(Tide.PORT, port_id)\
-                .equal_to(Tide.DATE, date)\
-                .include(Port.__name__)\
+            tide: LCTide = query.equal_to(LCTide.PORT, port_id)\
+                .greater_than_or_equal_to(LCTide.DATE, dt)\
+                .less_than(LCTide.DATE, dt+timedelta(1))\
+                .include(LCPort.__name__)\
                 .first()
-            return Tide()
+            return tide
         except Exception as ex:
-            self.logger.error(f"get tide {port_id}/{date} failed. {ex}",
+            self.logger.error(f"get tide {port_id}/{str(date)} failed. {ex}",
                               exc_info=True, stack_info=True)
             return None
 
-    def get_all_areas(self) -> List[AreaInfo]:
-        return super().get_all_areas()
+    def get_all_areas(self) -> List[Area]:
+        return LCArea.query.find()
 
-    def get_all_ports(self) -> List[PortInfo]:
-        return super().get_all_ports()
+    def get_all_ports(self) -> List[Port]:
+        return LCPort.query.find()

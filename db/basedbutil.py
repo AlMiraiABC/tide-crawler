@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from datetime import date, datetime
+from datetime import date
 from typing import List, Optional
 
-from crawler.model.location import AreaInfo, PortInfo
-from crawler.model.tide import Tide, TideDay, TideLimit
 
 from db.common import ExecState
+from db.model import Area, Port, Tide
 
 
 class BaseDbUtil(ABC):
@@ -22,37 +21,37 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def add_area(self, area: AreaInfo) -> ExecState:
-        """Add an area info or update it if exists"""
+    def add_area(self, area: Area) -> ExecState:
+        """Add an area or update it if exists"""
         pass
 
     @abstractmethod
-    def add_port(self, port: PortInfo) -> ExecState:
-        """Add a port info or update it if exists"""
+    def add_port(self, port: Port) -> ExecState:
+        """Add a port or update it if exists"""
         pass
 
     @abstractmethod
-    def add_tide(self, day: TideDay, limit: TideLimit, port_id: str,  zone: str = "+8:00", datum: float = 0.0, date: date = datetime.now().date()) -> ExecState:
+    def add_tide(self, Tide) -> ExecState:
         """Add a tide record"""
         pass
 
     @abstractmethod
-    def get_area(self, area_id: str) -> Optional[AreaInfo]:
+    def get_area(self, area_id: str) -> Optional[Area]:
         """
-        Get :class:`AreaInfo` by :param:`area_id`
+        Get :class:`CArea` by :param:`area_id`
 
-        :param area_id: Id of :class:`AreaInfo`
-        :return: :class:`AreaInfo` or :class:`None` if not found
+        :param area_id: Id of :class:`Area`
+        :return: :class:`Area` or :class:`None` if not found
         """
         pass
 
     @abstractmethod
-    def get_port(self, port_id: str = None) -> Optional[PortInfo]:
+    def get_port(self, port_id: str = None) -> Optional[Port]:
         """
-        Get :class:`PortInfo` by :param:`port_id`
+        Get :class:`Port` by :param:`port_id`
 
-        :param port_id: Id of :class:`PortInfo`
-        :return: :class:`PortInfo` or :class:`None` if not found
+        :param port_id: Id of :class:`Port`
+        :return: :class:`Port` or :class:`None` if not found
         """
         pass
 
@@ -61,18 +60,18 @@ class BaseDbUtil(ABC):
         """
         Get :class:`Tide` of specified date and port
 
-        :param port_id: Id of :class:`PortInfo`
+        :param port_id: Id of :class:`Port`
         :param date: Specified date
         :return: :class:`Tide` or :class:`None` if not found
         """
         pass
 
     @abstractmethod
-    def get_all_areas(self) -> List[AreaInfo]:
-        """Get all :class:`AreaInfo`s"""
+    def get_all_areas(self) -> List[Area]:
+        """Get all :class:`Area`s"""
         pass
 
     @abstractmethod
-    def get_all_ports(self) -> List[PortInfo]:
-        """Get all :class:`PortInfo`s"""
+    def get_all_ports(self) -> List[Port]:
+        """Get all :class:`Port`s"""
         pass

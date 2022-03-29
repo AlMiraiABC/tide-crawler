@@ -1,16 +1,17 @@
 import logging
+import os
 from enum import Enum, auto
 from typing import Optional
 
 
 class Storages(Enum):
-    """Storage engines, where to save data"""
+    """Data storage, where to save data"""
     LEAN_CLOUD = auto()  # leancloud storage https://www.leancloud.cn/storage/
     RDB = auto()  # Relational Database
 
 
 class Crawlers(Enum):
-    """Crawler engines, where data come from"""
+    """Data source, where data come from"""
     CXB = auto()  # https://www.chaoxibiao.net/
     CNSS = auto()  # https://www.cnss.com.cn/tide/
     NMDIS = auto()  # http://mds.nmdis.org.cn/pages/tidalCurrent.html
@@ -25,15 +26,15 @@ class LCSetting:
     """
     settings to connect [LeanCloud Data Storage](https://console.leancloud.cn/apps/{AppId}/storage/data)
     """
-    APP_ID: str = "Gu2SvkoBC8noi8OKlSLCvuRt-gzGzoHsz"
+    APP_ID: str = os.environ.get('TC_LC_APP_ID')
     # `APP_KEY` and `MASTER_KEY` cannot be empty or none at the same time
-    APP_KEY: Optional[str] = "8lo2qnnkjVku2rq1g00Qh38F"
+    APP_KEY: Optional[str] = os.environ.get('TC_LC_APP_KEY')
     # `APP_KEY` and `MASTER_KEY` cannot be empty or none at the same time
     MASTER_KEY: Optional[str] = None
     # username of spider in class _User
-    USERNAME = 'spider'
+    USERNAME = os.environ.get('TC_LC_UNAME')
     # password of spider in class _User
-    PASSWORD = 'TideSpider'
+    PASSWORD = os.environ.get('TC_LC_UPW')
     # logging level, will print log to console window
     # please close this when in prod env.
     DEBUG_LEVEL = logging.DEBUG

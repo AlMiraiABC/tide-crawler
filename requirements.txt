@@ -1,0 +1,7 @@
+requests
+leancloud
+gevent
+greenlet
+SQLAlchemy
+urllib3
+Werkzeug

@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, List, Tuple, Union
 
 
 class Value:
@@ -14,3 +14,23 @@ class Value:
             if not v:
                 return True
         return False
+
+    @staticmethod
+    def is_null_or_whitespace(*args: str) -> bool:
+        """
+        Determine whether at leaset one argument is `None` or only contains blanks.
+
+        Examples:
+        -----------
+
+        >>> is_null_or_whitespace('') # True
+        >>> is_null_or_whitespace('  ') # True
+        >>> is_null_or_whitespace(None) # Talse
+        >>> is_null_or_whitespace('abc') # False
+        >>> is_null_or_whitespace(['', 'abc']) # True
+        >>> is_null_or_whitespace(['  ', 'abc']) # True
+        >>> is_null_or_whitespace(['abc','def']) # False
+        """
+        for v in args:
+            if not v or not v.strip():
+                return True

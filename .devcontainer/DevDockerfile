@@ -1,0 +1,7 @@
+FROM almirai/python:3.8.12-alpine
+COPY requirements.txt .
+USER root
+ENV PATH /home/appuser/.local/bin:$PATH
+RUN python -m pip install --no-cache-dir -U -i https://pypi.tuna.tsinghua.edu.cn/simple pip && \
+    pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+USER appuser
