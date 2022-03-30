@@ -8,9 +8,9 @@ https://leancloud.cn/docs/leanstorage_guide-python.html#hash23473483
 
 import datetime
 from typing import Any, List, Optional, Union
-from db.dbutil import db_util
 
-from db.model import Area, BaseClazz, Port, Tide, TideItem, WithInfo
+from db.dbutil import db_util
+from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
 
 from leancloud import GeoPoint, Object
 
@@ -71,12 +71,11 @@ class LCArea(LCWithInfo):
         super().__init__(**attrs, class_name='Area')
 
 
-class LCPort(LCWithInfo):
+class LCProvince(LCWithInfo):
     AREA = 'area'
-    GEOPOINT = 'geopoint'
 
     def __init__(self, **attrs):
-        super().__init__(**attrs, class_name='Port')
+        super().__init__(**attrs, class_name='Province')
 
     @property
     def area(self) -> LCArea:
@@ -85,6 +84,30 @@ class LCPort(LCWithInfo):
     @area.setter
     def area(self, area: LCArea):
         self.set(LCPort.AREA, area)
+
+
+class LCPort(LCWithInfo):
+    PROVINCE = 'province'
+    GEOPOINT = 'geopoint'
+
+    def __init__(self, **attrs):
+        super().__init__(**attrs, class_name='Port')
+
+    @property
+    def province(self) -> LCProvince:
+        return self.get(LCPort.PROVINCE)
+
+    @province.setter
+    def province(self, province: LCProvince):
+        self.set(LCPort.PROVINCE, province)
+
+    @property
+    def zone(self) -> str:
+        return self.get(LCTide.ZONE)
+
+    @zone.setter
+    def zone(self, value: str):
+        self.set(LCTide.LIMIT, value)
 
     @property
     def geopoint(self) -> GeoPoint:
@@ -100,7 +123,6 @@ class LCTide(LCBaseClazz):
     LIMIT = 'limit'
     PORT = 'port'
     DATE = 'date'
-    ZONE = 'zone'
     DATUM = 'datum'
 
     def __init__(self, **attrs):
@@ -147,14 +169,6 @@ class LCTide(LCBaseClazz):
         self.set(LCTide.DATE, value)
 
     @property
-    def zone(self) -> str:
-        return self.get(LCTide.ZONE)
-
-    @zone.setter
-    def zone(self, value: str):
-        self.set(LCTide.LIMIT, value)
-
-    @property
     def datum(self) -> float:
         return self.get(LCTide.DATUM)
 
@@ -166,5 +180,6 @@ class LCTide(LCBaseClazz):
 BaseClazz.register(LCBaseClazz)
 WithInfo.register(LCWithInfo)
 Area.register(LCArea)
+Province.register(LCProvince)
 Port[GeoPoint].register(LCPort)
 Tide.register(LCTide)
