@@ -17,24 +17,24 @@ __BaseTable = declarative_base()
 
 
 class RDBBaseClazz(__BaseTable, BaseClazz):
-    cid = Column('id', Integer, primary_key=True)
-    ccreatedAt = Column('createdAt', DateTime,
+    did = Column('id', Integer, primary_key=True)
+    dcreatedAt = Column('createdAt', DateTime,
                         server_default="CURRENT_TIMESTAMP(3)")
-    cupdatedAt = Column('updatedAt', DateTime, server_default="CURRENT_TIMESTAMP(3)",
+    dupdatedAt = Column('updatedAt', DateTime, server_default="CURRENT_TIMESTAMP(3)",
                         server_onupdate="CURRENT_TIMESTAMP(3)")
     draw = Column('raw', JSON)
 
     @property
     def objectId(self) -> Optional[str]:
-        return self.cid
+        return str(self.did)
 
     @property
     def createdAt(self) -> Optional[datetime.datetime]:
-        return self.ccreatedAt
+        return self.dcreatedAt
 
     @property
     def updatedAt(self) -> Optional[datetime.datetime]:
-        return self.cupdatedAt
+        return self.dupdatedAt
 
     @property
     def raw(self) -> Optional[Any]:
