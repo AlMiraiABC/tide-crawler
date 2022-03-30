@@ -13,7 +13,8 @@ class BaseClazz(ABC):
     @property
     @abstractmethod
     def objectId(self) -> Optional[str]:
-        """Row id. Generated automatically."""
+        """Row id. Primary key. Generated automatically."""
+        # the primary key may be string guid or others type.
         pass
 
     @property

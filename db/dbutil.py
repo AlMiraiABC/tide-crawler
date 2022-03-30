@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from typing import List, Optional, Tuple
 
 from leancloud.object_ import Object
@@ -9,7 +9,7 @@ from util.singleton import Singleton
 from db.basedbutil import BaseDbUtil
 from db.common import ExecState
 from db.leancloud.lc_util import LCUtil
-from db.model import Area, Port, Tide, TideItem
+from db.model import Area, Port, Tide
 from db.rdb.rdb_util import RDBUtil
 from util.validate import Value
 
