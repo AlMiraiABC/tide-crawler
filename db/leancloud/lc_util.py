@@ -118,12 +118,16 @@ class LCUtil(BaseDbUtil):
         """
         Try to insert :param:`obj`, or update if exists.
 
-        :param query: Try to get exists object.
+        :param obj: Object which will be inserted.
+        :param col: Compared column.
         :param save: Get an instance to save or update.
             Args:
                 - Queried object from :param:`query`
             Returns:
                 An object to create or insert.
+        :param clazz: Inserted object class type.
+        :param rid_query: Query callback if `col=='rid'.
+        :return: (execute-state, inserted-or-updated-object)
         """
         r, o = self.__get(obj, col, clazz, rid_query)
         ins = save(o)
