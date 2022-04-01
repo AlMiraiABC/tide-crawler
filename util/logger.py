@@ -39,7 +39,7 @@ class Logger:
         # get caller's path
         log_path: str = _package_name(sys._getframe(1).f_code.co_filename)
         with open(logging_config, "r") as f:
-            config = yaml.load(f)
+            config = yaml.load(f,yaml.Loader)
             logging.config.dictConfig(config)
         # 将``包名.文件名.class_name``作为Logger名
         self.logger = logging.getLogger(f'{log_path}.{class_name}')
