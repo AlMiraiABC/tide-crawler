@@ -9,7 +9,6 @@ https://leancloud.cn/docs/leanstorage_guide-python.html#hash23473483
 import datetime
 from typing import Any, List, Optional, Union
 
-from db.dbutil import db_util
 from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
 
 from leancloud import GeoPoint, Object
@@ -21,8 +20,8 @@ class LCBaseClazz(Object):
     UPDATED_AT = 'updatedAt'
     RAW = 'raw'
 
-    def __init__(self, **attrs):
-        super().__init__(**attrs, class_name=type(self).__name__)
+    def __init__(self):
+        super().__init__()
 
     @property
     def objectId(self) -> Optional[str]:
@@ -67,15 +66,19 @@ class LCWithInfo(LCBaseClazz):
 
 
 class LCArea(LCWithInfo):
-    def __init__(self, **attrs):
-        super().__init__(**attrs, class_name='Area')
+    _class_name = 'Area'
+
+    def __init__(self):
+        super().__init__()
+        self._class_name
 
 
 class LCProvince(LCWithInfo):
+    _class_name = ('Province')
     AREA = 'area'
 
-    def __init__(self, **attrs):
-        super().__init__(**attrs, class_name='Province')
+    def __init__(self):
+        super().__init__()
 
     @property
     def area(self) -> LCArea:
@@ -87,11 +90,12 @@ class LCProvince(LCWithInfo):
 
 
 class LCPort(LCWithInfo):
+    _class_name = 'Port'
     PROVINCE = 'province'
     GEOPOINT = 'geopoint'
 
-    def __init__(self, **attrs):
-        super().__init__(**attrs, class_name='Port')
+    def __init__(self):
+        super().__init__()
 
     @property
     def province(self) -> LCProvince:
@@ -119,14 +123,15 @@ class LCPort(LCWithInfo):
 
 
 class LCTide(LCBaseClazz):
+    _class_name = 'Tide'
     DAY = 'day'
     LIMIT = 'limit'
     PORT = 'port'
     DATE = 'date'
     DATUM = 'datum'
 
-    def __init__(self, **attrs):
-        super().__init__(**attrs, class_name='Tide')
+    def __init__(self):
+        super().__init__()
 
     def __to_tideitem(self, d: List[dict]):
         return [TideItem.from_dict(i) for i in d]
@@ -156,9 +161,8 @@ class LCTide(LCBaseClazz):
         return self.get(LCTide.PORT)
 
     @port.setter
-    def port(self, value: Union[LCPort, str]):
-        self.set(LCTide.PORT, value if type(value) ==
-                 LCPort else db_util.get_port(value))
+    def port(self, value: LCPort):
+        self.set(LCTide.PORT, value)
 
     @property
     def date(self) -> datetime.datetime:

@@ -4,8 +4,7 @@ base model class definitions
 
 import datetime
 from abc import ABC, abstractmethod
-from optparse import Option
-from typing import Any, Generic, List, NewType, Optional, Tuple, TypeVar
+from typing import Any, Generic, List, Optional, TypeVar
 
 
 class BaseClazz(ABC):
