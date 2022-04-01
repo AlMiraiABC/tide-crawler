@@ -2,7 +2,9 @@
     "python.defaultInterpreterPath": "D:\\conda\\envs\\TideCrawler\\python.exe",
     "conventionalCommits.scopes": [
         "db",
-        "util"
+        "util",
+        "test",
+        "doc"
     ],
     "python.testing.unittestArgs": [
         "-v",
