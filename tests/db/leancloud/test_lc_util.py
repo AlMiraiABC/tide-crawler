@@ -18,6 +18,40 @@ def random_str(s='0123456789abcdef', l=24):
     return ''.join(random.choices(s, k=l))
 
 
+def add_area(save: bool = True):
+    area = LCArea()
+    area.raw = random_str()
+    area.name = random_str()
+    area.rid = random_str()
+    if save:
+        area.save()
+    return area
+
+
+def add_province(area: LCArea, save: bool = True):
+    province = LCProvince()
+    province.area = area
+    province.name = random_str()
+    province.raw = random_str()
+    province.rid = random_str()
+    if save:
+        province.save()
+    return province
+
+
+def add_port(province: LCProvince, save: bool = True):
+    port = LCPort()
+    port.province = province
+    port.zone = random_str()
+    port.raw = random_str()
+    port.name = random_str()
+    port.rid = random_str()
+    port.geopoint = leancloud.GeoPoint(0, 0)
+    if save:
+        port.save()
+    return port
+
+
 class TestLCUtilInit(TestCase):
     def test_init(self):
         lc = LCUtil()
@@ -31,7 +65,7 @@ class TestLCUtilInit(TestCase):
         self.assertIsNone(cu)
 
 
-class TestLCUtilCRUD(TestCase):
+class TestLCUtilAdd(TestCase):
     lc: LCUtil = None
 
     @classmethod
@@ -57,10 +91,7 @@ class TestLCUtilCRUD(TestCase):
             o.rid = area.rid
             return o
 
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
+        area = add_area(False)
         (ret, inserted) = self.lc.try_insert(area, 'rid', save, LCArea)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertTrue(inserted.is_existed())
@@ -74,11 +105,7 @@ class TestLCUtilCRUD(TestCase):
             o.rid = arean.rid
             return o
 
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
-        area.save()
+        area = add_area()
         arean = LCArea()
         arean.rid = area.rid
         arean.name = random_str()
@@ -91,21 +118,14 @@ class TestLCUtilCRUD(TestCase):
 
     def test_add_area_id_unexist(self):
         """add_area compared by id and unexist so create it."""
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
+        area = add_area(False)
         (ret, _) = self.lc.add_area(area, 'id')
         self.assertEquals(ret, ExecState.CREATE)
         delete(area)
 
     def test_add_area_id_exist(self):
         """add_area compared by id and exist so update it."""
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
-        area.save()
+        area = add_area()
         id = area.id  # get new id
         area = LCArea.create_without_data(id)
         area.raw = random_str()
@@ -118,10 +138,7 @@ class TestLCUtilCRUD(TestCase):
 
     def test_add_area_rid_unexist(self):
         """add_area compared by rid and unexist so create it."""
-        area = LCArea()  # has been deleted
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
+        area = add_area(False)
         (ret, inserted) = self.lc.add_area(area, 'rid')
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.rid, area.rid)
@@ -129,11 +146,7 @@ class TestLCUtilCRUD(TestCase):
 
     def test_add_area_rid_exist(self):
         """add_area compared by rid but unexist so update it."""
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
-        area.save()
+        area = add_area()
         arean = LCArea()
         arean.raw = random_str()
         arean.name = random_str()
@@ -145,17 +158,9 @@ class TestLCUtilCRUD(TestCase):
 
     def test_add_province_area_exist(self):
         """add_province by id """
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
-        area.save()
+        area = add_area()
         a = LCArea.create_without_data(area.id)
-        province = LCProvince()
-        province.area = a
-        province.name = random_str()
-        province.raw = random_str()
-        province.rid = random_str()
+        province = add_province(a, False)
         (ret, inserted) = self.lc.add_province(province, 'id')
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.id, area.id)
@@ -163,15 +168,8 @@ class TestLCUtilCRUD(TestCase):
 
     def test_add_province_area_unexist(self):
         """add_province failed and raise exception becase area doesn't exist."""
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
-        province = LCProvince()
-        province.area = area
-        province.name = random_str()
-        province.raw = random_str()
-        province.rid = random_str()
+        area = add_area(False)
+        province = add_province(area, False)
         with self.assertRaises(ValueError):
             self.lc.add_province(province, 'id')
 
@@ -182,19 +180,33 @@ class TestLCUtilCRUD(TestCase):
         area.rid exists
         so create it.
         """
-        area = LCArea()
-        area.raw = random_str()
-        area.name = random_str()
-        area.rid = random_str()
-        area.save()
+        area = add_area()
         a = LCArea()
         a.rid = area.rid
-        province = LCProvince()
-        province.area = a
-        province.name = random_str()
-        province.raw = random_str()
-        province.rid = random_str()
+        province = add_province(a, False)
         (ret, inserted) = self.lc.add_province(province, 'rid')
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.id, area.id)
         delete(province, area)
+
+    def test_add_port_province_unexist(self):
+        """
+        add_port
+        province exists
+        so create it.
+        """
+        province = LCProvince()
+
+
+class TestLCUtilGet(TestCase):
+    lc: LCUtil = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.lc = LCUtil()
+        return super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.lc.logout()
+        return super().tearDownClass()
