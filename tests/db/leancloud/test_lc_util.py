@@ -2,7 +2,7 @@ import random
 from unittest import TestCase
 
 from db.common import ExecState
-from db.leancloud.lc_model import LCArea
+from db.leancloud.lc_model import LCArea, LCPort, LCProvince, LCTide
 from db.leancloud.lc_util import LCUtil
 
 import leancloud
@@ -128,7 +128,7 @@ class TestLCUtilCRUD(TestCase):
         delete(area)
 
     def test_add_area_rid_exist(self):
-        """add_area compared by rid and unexist so update it."""
+        """add_area compared by rid but unexist so update it."""
         area = LCArea()
         area.raw = random_str()
         area.name = random_str()
@@ -142,3 +142,59 @@ class TestLCUtilCRUD(TestCase):
         self.assertEquals(ret, ExecState.UPDATE)
         self.assertEquals(updated.name, arean.name)
         delete(updated)
+
+    def test_add_province_area_exist(self):
+        """add_province by id """
+        area = LCArea()
+        area.raw = random_str()
+        area.name = random_str()
+        area.rid = random_str()
+        area.save()
+        a = LCArea.create_without_data(area.id)
+        province = LCProvince()
+        province.area = a
+        province.name = random_str()
+        province.raw = random_str()
+        province.rid = random_str()
+        (ret, inserted) = self.lc.add_province(province, 'id')
+        self.assertEquals(ret, ExecState.CREATE)
+        self.assertEquals(inserted.area.id, area.id)
+        delete(province, area)
+
+    def test_add_province_area_unexist(self):
+        """add_province failed and raise exception becase area doesn't exist."""
+        area = LCArea()
+        area.raw = random_str()
+        area.name = random_str()
+        area.rid = random_str()
+        province = LCProvince()
+        province.area = area
+        province.name = random_str()
+        province.raw = random_str()
+        province.rid = random_str()
+        with self.assertRaises(ValueError):
+            self.lc.add_province(province, 'id')
+
+    def test_add_province_area_rid_exist(self):
+        """
+        add_province
+        province.rid doesn't exist
+        area.rid exists
+        so create it.
+        """
+        area = LCArea()
+        area.raw = random_str()
+        area.name = random_str()
+        area.rid = random_str()
+        area.save()
+        a = LCArea()
+        a.rid = area.rid
+        province = LCProvince()
+        province.area = a
+        province.name = random_str()
+        province.raw = random_str()
+        province.rid = random_str()
+        (ret, inserted) = self.lc.add_province(province, 'rid')
+        self.assertEquals(ret, ExecState.CREATE)
+        self.assertEquals(inserted.area.id, area.id)
+        delete(province, area)
