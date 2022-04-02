@@ -80,17 +80,18 @@ class LCProvince(LCWithInfo):
 
     @property
     def area(self) -> LCArea:
-        return self.get(LCPort.AREA)
+        return self.get(LCProvince.AREA)
 
     @area.setter
     def area(self, area: LCArea):
-        self.set(LCPort.AREA, area)
+        self.set(LCProvince.AREA, area)
 
 
 @Object.as_class("Port")
 class LCPort(LCWithInfo):
     PROVINCE = 'province'
     GEOPOINT = 'geopoint'
+    ZONE = 'zone'
 
     def __init__(self):
         super().__init__()
@@ -105,11 +106,11 @@ class LCPort(LCWithInfo):
 
     @property
     def zone(self) -> str:
-        return self.get(LCTide.ZONE)
+        return self.get(LCPort.ZONE)
 
     @zone.setter
     def zone(self, value: str):
-        self.set(LCTide.LIMIT, value)
+        self.set(LCPort.ZONE, value)
 
     @property
     def geopoint(self) -> GeoPoint:

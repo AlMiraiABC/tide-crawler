@@ -86,9 +86,14 @@ class LCUtil(BaseDbUtil):
         q: Query = clazz.query
         rid_query = rid_query if callable(
             rid_query) else lambda: q.equal_to(clazz.RID, objid).first()
+
+        def id_cb():
+            return (ExecState.UN_EXIST, None) \
+                if Value.is_any_none_or_whitespace(objid) \
+                else (ExecState.EXIST, q.get(objid))
         try:
             # TODO consider using `clazz.create_without_data`` instead of `q.get``
-            return switch_idt(col, lambda: (ExecState.EXIST, q.get(objid)), lambda: (ExecState.EXIST, rid_query()))
+            return switch_idt(col, id_cb, lambda: (ExecState.EXIST, rid_query()))
         except Exception as ex:
             errmsg = f'occured an error when get object by {col}({objid}). {ex}'
             return self.__lcex_wrapper(ex, errmsg, lambda: (ExecState.UN_EXIST, None), lambda: (ExecState.FAIL, None))
@@ -131,9 +136,12 @@ class LCUtil(BaseDbUtil):
         """
         r, o = self.__get(obj, col, clazz, rid_query)
         ins = save(o)
+        if not isinstance(ins, LCWithInfo):
+            raise TypeError(
+                f"Except {LCWithInfo.__name__} but got {type(ins)} from :param:`save`")
         try:
             if r == ExecState.UN_EXIST:
-                raise LeanCloudError(101,'')
+                raise LeanCloudError(101, '')
             if r == ExecState.FAIL:
                 return ExecState.FAIL, None
             if r == ExecState.EXIST:
@@ -162,6 +170,7 @@ class LCUtil(BaseDbUtil):
             o.area = area
             o.name = province.name
             o.rid = province.rid
+            return o
 
         (ret, area) = self.__get(province.area, col, LCArea)
         if ret != ExecState.EXIST:
