@@ -65,16 +65,14 @@ class LCWithInfo(LCBaseClazz):
         self.set(LCWithInfo.NAME, value)
 
 
+@Object.as_class("Area")
 class LCArea(LCWithInfo):
-    _class_name = 'Area'
-
     def __init__(self):
         super().__init__()
-        self._class_name
 
 
+@Object.as_class("Province")
 class LCProvince(LCWithInfo):
-    _class_name = ('Province')
     AREA = 'area'
 
     def __init__(self):
@@ -89,8 +87,8 @@ class LCProvince(LCWithInfo):
         self.set(LCPort.AREA, area)
 
 
+@Object.as_class("Port")
 class LCPort(LCWithInfo):
-    _class_name = 'Port'
     PROVINCE = 'province'
     GEOPOINT = 'geopoint'
 
@@ -122,8 +120,8 @@ class LCPort(LCWithInfo):
         self.set(LCPort.GEOPOINT, value)
 
 
+@Object.as_class("Tide")
 class LCTide(LCBaseClazz):
-    _class_name = 'Tide'
     DAY = 'day'
     LIMIT = 'limit'
     PORT = 'port'

@@ -82,15 +82,15 @@ class LCUtil(BaseDbUtil):
     def __get(self, obj: LCWithInfo, col: IDT, clazz: Type[LCBaseClazz], rid_query: Callable[[], LCBaseClazz] = None):
         return self.__get_by_id(switch_idt(col, obj.id, obj.rid), col, clazz, rid_query)
 
-    def __get_by_id(self, id: str, col: IDT, clazz: Type[LCBaseClazz], rid_query: Callable[[], LCBaseClazz] = None) -> Tuple[ExecState, Optional[LCBaseClazz]]:
+    def __get_by_id(self, objid: str, col: IDT, clazz: Type[LCBaseClazz], rid_query: Callable[[], LCBaseClazz] = None) -> Tuple[ExecState, Optional[LCBaseClazz]]:
         q: Query = clazz.query
         rid_query = rid_query if callable(
-            rid_query) else lambda: q.equal_to(clazz.RID, id).first()
+            rid_query) else lambda: q.equal_to(clazz.RID, objid).first()
         try:
             # TODO consider using `clazz.create_without_data`` instead of `q.get``
-            return switch_idt(col, lambda: (ExecState.EXIST, q.get(id)), lambda: (ExecState.EXIST, rid_query()))
+            return switch_idt(col, lambda: (ExecState.EXIST, q.get(objid)), lambda: (ExecState.EXIST, rid_query()))
         except Exception as ex:
-            errmsg = f'occured an error when get object by {col}({id}). {ex}'
+            errmsg = f'occured an error when get object by {col}({objid}). {ex}'
             return self.__lcex_wrapper(ex, errmsg, lambda: (ExecState.UN_EXIST, None), lambda: (ExecState.FAIL, None))
 
     def __lcex_wrapper(self, ex: Exception, errmsg: str, unexist_cb: Callable[[], Any], err_cb: Callable[[], Any]):
@@ -288,7 +288,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return []
 
-    def get_provinces(self, area: Union[Area, str], col: IDT = 'id') -> List[Province]:
+    def get_provinces(self, area: Union[Area, str], col: IDT) -> List[Province]:
         if isinstance(area, str):
             return self.__get_provinces_area_str(area, col)
         elif isinstance(area, LCArea):
