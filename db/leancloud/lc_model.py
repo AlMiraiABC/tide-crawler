@@ -14,7 +14,12 @@ from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
 from leancloud import GeoPoint, Object
 
 
-class LCBaseClazz(Object):
+class _LCMeta(type(Object), type(BaseClazz)):
+    """Meta class to resolve conflict metaclass error."""
+    pass
+
+
+class LCBaseClazz(Object, BaseClazz, metaclass=_LCMeta):
     OBJECT_ID = 'objectId'
     CREATED_AT = 'createdAt'
     UPDATED_AT = 'updatedAt'
@@ -44,7 +49,7 @@ class LCBaseClazz(Object):
         self.set(LCBaseClazz.RAW, data)
 
 
-class LCWithInfo(LCBaseClazz):
+class LCWithInfo(LCBaseClazz, WithInfo):
     NAME = 'name'
     RID = 'rid'
 
@@ -66,13 +71,13 @@ class LCWithInfo(LCBaseClazz):
 
 
 @Object.as_class("Area")
-class LCArea(LCWithInfo):
+class LCArea(LCWithInfo, Area):
     def __init__(self):
         super().__init__()
 
 
 @Object.as_class("Province")
-class LCProvince(LCWithInfo):
+class LCProvince(LCWithInfo, Province):
     AREA = 'area'
 
     def __init__(self):
@@ -88,7 +93,7 @@ class LCProvince(LCWithInfo):
 
 
 @Object.as_class("Port")
-class LCPort(LCWithInfo):
+class LCPort(LCWithInfo, Port):
     PROVINCE = 'province'
     GEOPOINT = 'geopoint'
     ZONE = 'zone'
@@ -122,7 +127,7 @@ class LCPort(LCWithInfo):
 
 
 @Object.as_class("Tide")
-class LCTide(LCBaseClazz):
+class LCTide(LCBaseClazz, Tide):
     DAY = 'day'
     LIMIT = 'limit'
     PORT = 'port'
@@ -178,11 +183,3 @@ class LCTide(LCBaseClazz):
     @datum.setter
     def datum(self, value: float):
         self.set(LCTide.DATUM, value)
-
-
-BaseClazz.register(LCBaseClazz)
-WithInfo.register(LCWithInfo)
-Area.register(LCArea)
-Province.register(LCProvince)
-Port[GeoPoint].register(LCPort)
-Tide.register(LCTide)
