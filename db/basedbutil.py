@@ -41,22 +41,22 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def add_area(self, area: Area, col: IDT) -> Tuple[ExecState, Optional[BaseClazz]]:
+    def add_area(self, area: Area, col: IDT) -> Tuple[ExecState, Optional[Area]]:
         """Add an area or update it if exists"""
         pass
 
     @abstractmethod
-    def add_province(self, province: Province, col: IDT) -> Tuple[ExecState, Optional[BaseClazz]]:
+    def add_province(self, province: Province, col: IDT) -> Tuple[ExecState, Optional[Province]]:
         """Add an province or update it if exists."""
         pass
 
     @abstractmethod
-    def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, Optional[BaseClazz]]:
+    def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, Optional[Port]]:
         """Add a port or update it if exists"""
         pass
 
     @abstractmethod
-    def add_tide(self, Tide, col: IDT) -> Tuple[ExecState, Optional[BaseClazz]]:
+    def add_tide(self, Tide, col: IDT) -> Tuple[ExecState, Optional[Tide]]:
         """Add a tide record"""
         pass
 

@@ -173,7 +173,7 @@ class LCUtil(BaseDbUtil):
             errmsg = f"add {type(ins).__name__} failed {ins.__dict__}. {ex}"
             return self.__lcex_wrapper(ex, errmsg, lambda: self.__save(save(None)), lambda: (ExecState.FAIL, None))
 
-    def add_area(self, area: Area, col: IDT) -> Tuple[ExecState, BaseClazz]:
+    def add_area(self, area: Area, col: IDT) -> Tuple[ExecState, Optional[LCArea]]:
         def save(o: Optional[LCArea]):
             o = self.__before_save(area, o, LCArea)
             o.raw = area.raw
@@ -183,7 +183,7 @@ class LCUtil(BaseDbUtil):
 
         return self.try_insert(area, col, save, LCArea)
 
-    def add_province(self, province: Province, col: IDT) -> Tuple[ExecState, Optional[BaseClazz]]:
+    def add_province(self, province: Province, col: IDT) -> Tuple[ExecState, Optional[LCProvince]]:
         def save(o: LCProvince):
             o = self.__before_save(province, o, LCProvince)
             o.raw = province.raw
@@ -198,7 +198,7 @@ class LCUtil(BaseDbUtil):
         q: Query = LCProvince.query
         return self.try_insert(province, col, save, LCProvince, q.equal_to(LCProvince.RID, province.rid).equal_to(LCProvince.AREA, area))
 
-    def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, BaseClazz]:
+    def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, Optional[LCPort]]:
         def save(o: Optional[LCPort]):
             o = self.__before_save(port, o, LCPort)
             o.raw = port.raw
@@ -216,11 +216,10 @@ class LCUtil(BaseDbUtil):
         query: Query = LCPort.query
         return self.try_insert(port, col, save, LCPort, query.equal_to(LCPort.RID, port.rid).equal_to(LCPort.PROVINCE, province))
 
-    def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, BaseClazz]:
-        port: LCPort = LCPort()
+    def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Optional[LCTide]]:
         t: LCTide = LCTide()
         (ret, port) = self.__get(tide.port, col, LCPort)
-        if ret != ExecState.EXIST:
+        if ret != ExecState.EXIST or port is None:  # port check or IDE
             raise ValueError(f'the port {tide.port} is not exist.')
         try:
             t.port = port
@@ -236,7 +235,7 @@ class LCUtil(BaseDbUtil):
                 f"tide {tide} create failed. {ex}", exc_info=True, stack_info=True)
         return ExecState.FAIL, None
 
-    def get_area(self, area_id: str, col: IDT) -> Optional[Area]:
+    def get_area(self, area_id: str, col: IDT) -> Optional[LCArea]:
         try:
             return self.__get_by_id(area_id, col, LCArea)
         except Exception as ex:
@@ -244,7 +243,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return None
 
-    def get_province(self, province_id: str, col: IDT) -> Optional[Province]:
+    def get_province(self, province_id: str, col: IDT) -> Optional[LCProvince]:
         try:
             return self.__get_by_id(province_id, col, LCProvince)
         except Exception as ex:
@@ -252,7 +251,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return None
 
-    def get_port(self, port_rid: str = None) -> Optional[Port]:
+    def get_port(self, port_rid: str = None) -> Optional[LCPort]:
         query: Query = LCPort.query
         try:
             port: LCPort = query.equal_to(
@@ -263,7 +262,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return None
 
-    def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
+    def get_tide(self, port_id: str, d: date) -> Optional[LCTide]:
         query: Query = LCTide.query
         dt = datetime(d.year, d.month, d.day)
         try:
@@ -277,7 +276,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return None
 
-    def get_areas(self) -> List[Area]:
+    def get_areas(self) -> List[LCArea]:
         try:
             return LCArea.query.find()
         except Exception as ex:
@@ -286,14 +285,14 @@ class LCUtil(BaseDbUtil):
         return []
 
     @overload
-    def get_provinces(self, area: Area) -> List[Province]:
+    def get_provinces(self, area: Area) -> List[LCProvince]:
         pass
 
     @overload
-    def get_provinces(self, area: str, col: IDT) -> List[Province]:
+    def get_provinces(self, area: str, col: IDT) -> List[LCProvince]:
         pass
 
-    def __get_provinces_area_str(self, area: str, col: IDT) -> List[Province]:
+    def __get_provinces_area_str(self, area: str, col: IDT) -> List[LCProvince]:
         if Value.is_any_none_or_whitespace(area):
             raise ValueError('area cannot be none or empty.')
         q: Query = LCProvince.query
@@ -306,7 +305,7 @@ class LCUtil(BaseDbUtil):
             self.logger.error(f'get provinces by {area} failed. {ex}')
         return []
 
-    def __get_provinces_area_clazz(self, area: Area) -> List[Province]:
+    def __get_provinces_area_clazz(self, area: Area) -> List[LCProvince]:
         if area is None or Value.is_any_none_or_whitespace(area.objectId):
             raise ValueError('area or area.objectId cannot be none or empty.')
         q: Query = LCProvince.query
@@ -317,7 +316,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return []
 
-    def get_provinces(self, area: Union[Area, str], col: IDT) -> List[Province]:
+    def get_provinces(self, area: Union[Area, str], col: IDT) -> List[LCProvince]:
         if isinstance(area, str):
             return self.__get_provinces_area_str(area, col)
         elif isinstance(area, LCArea):
@@ -326,14 +325,14 @@ class LCUtil(BaseDbUtil):
             f'type of area must be {str.__name__} or {LCArea.__name__}, but got {type(area)}')
 
     @overload
-    def get_ports(self, province: Province) -> List[Port]:
+    def get_ports(self, province: Province) -> List[LCPort]:
         pass
 
     @overload
-    def get_ports(self, province: str, col: IDT) -> List[Port]:
+    def get_ports(self, province: str, col: IDT) -> List[LCPort]:
         pass
 
-    def __get_ports_province_str(self, province: str, col: IDT) -> List[Port]:
+    def __get_ports_province_str(self, province: str, col: IDT) -> List[LCPort]:
         if Value.is_any_none_or_whitespace(province):
             raise ValueError('province cannot be none or empty.')
         q: Query = LCProvince.query
@@ -346,7 +345,7 @@ class LCUtil(BaseDbUtil):
             self.logger.error(f'get ports by {province} failed. {ex}')
         return []
 
-    def __get_ports_province_clazz(self, province: Province) -> List[Port]:
+    def __get_ports_province_clazz(self, province: Province) -> List[LCPort]:
         if province is None or Value.is_any_none_or_whitespace(province.objectId):
             raise ValueError('area or area.objectId cannot be none or empty.')
         q: Query = LCPort.query
@@ -357,7 +356,7 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
         return []
 
-    def get_ports(self, province: Union[Province, str], col: IDT) -> List[Port]:
+    def get_ports(self, province: Union[Province, str], col: IDT) -> List[LCPort]:
         if isinstance(province, str):
             return self.__get_ports_province_str(province, col)
         elif isinstance(province, LCArea):

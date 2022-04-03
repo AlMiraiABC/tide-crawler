@@ -9,7 +9,7 @@ https://leancloud.cn/docs/leanstorage_guide-python.html#hash23473483
 import datetime
 from typing import Any, List, Optional, Union
 
-from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
+from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, TideItemDict, WithInfo
 
 from leancloud import GeoPoint, Object
 
@@ -137,28 +137,28 @@ class LCTide(LCBaseClazz, Tide):
     def __init__(self):
         super().__init__()
 
-    def __to_tideitem(self, d: List[dict]):
+    def __to_tideitems(self, d: List[dict]):
         return [TideItem.from_dict(i) for i in d]
 
-    def __to_dictlist(self, v: List[Union[TideItem, dict]]):
+    def __to_dicts(self, v: List[Union[TideItem, TideItemDict]]):
         return [i.to_dict() if type(i) == TideItem else i for i in v]
 
     @property
     def day(self) -> List[TideItem]:
         d: List[dict] = self.get(LCTide.DAY)
-        return self.__to_tideitem(d)
+        return self.__to_tideitems(d)
 
     @day.setter
-    def day(self, value: List[Union[TideItem, dict]]):
-        self.set(LCTide.DAY, self.__to_dictlist(value))
+    def day(self, value: List[Union[TideItem, TideItemDict]]):
+        self.set(LCTide.DAY, self.__to_dicts(value))
 
     @property
     def limit(self) -> List[TideItem]:
-        return self.__to_tideitem(self.get(LCTide.LIMIT))
+        return self.__to_tideitems(self.get(LCTide.LIMIT))
 
     @limit.setter
     def limit(self, value: List[TideItem]):
-        self.set(LCTide.LIMIT, self.__to_dictlist(value))
+        self.set(LCTide.LIMIT, self.__to_dicts(value))
 
     @property
     def port(self) -> LCPort:
