@@ -4,7 +4,9 @@ base model class definitions
 
 import datetime
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Any, Generic, List, Optional, TypedDict, TypeVar
+
+from util.validate import Value
 
 
 class BaseClazz(ABC):
@@ -137,6 +139,11 @@ class Port(WithInfo, Generic[TGP]):
         pass
 
 
+class TideItemDict(TypedDict):
+    time: Optional[str]
+    height: Optional[float]
+
+
 class TideItem():
     """Store a tide data pair include time and height."""
     TIME = 'time'
@@ -146,15 +153,21 @@ class TideItem():
         self.time = time
         self.height = height
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> TideItemDict:
         """Convert self :class:`TideItem` to dict"""
-        return {TideItem.TIME: str(self.time), TideItem.HEIGHT: self.height}
+        strtime = str(self.time) if self.time is not None else None
+        return {TideItem.TIME: strtime, TideItem.HEIGHT: self.height}
 
     @staticmethod
-    def from_dict(value: dict):
+    def from_dict(value: TideItemDict):
         """Convert dict to :class:`TideItem`"""
-        time = datetime.time.fromisoformat(value[TideItem.TIME])
-        height = value[TideItem.HEIGHT]
+        if value is None:
+            return TideItem(None, None)
+        if Value.is_any_none_or_whitespace(value.get(TideItem.TIME)):
+            time = None
+        else:
+            time = datetime.time.fromisoformat(value[TideItem.TIME])
+        height = value.get(TideItem.HEIGHT)
         return TideItem(time, height)
 
 
