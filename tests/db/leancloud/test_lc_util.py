@@ -1,3 +1,4 @@
+import datetime
 import random
 from unittest import TestCase
 
@@ -6,6 +7,8 @@ from db.leancloud.lc_model import LCArea, LCPort, LCProvince, LCTide
 from db.leancloud.lc_util import LCUtil
 
 import leancloud
+
+from db.model import TideItem
 
 
 def delete(*args):
@@ -37,6 +40,18 @@ def add_province(area: LCArea, save: bool = True):
     if save:
         province.save()
     return province
+
+
+def add_port(province: LCProvince, save: bool = True):
+    port = LCPort()
+    port.raw = random_str()
+    port.rid = random_str()
+    port.province = province
+    port.zone = random_str()
+    port.geopoint = leancloud.GeoPoint(0, 0)
+    if save:
+        port.save()
+    return port
 
 
 def add_port(province: LCProvince, save: bool = True):
@@ -222,6 +237,35 @@ class TestLCUtilAdd(TestCase):
         (ret, inserted) = self.lc.add_port(port, 'id')
         self.assertEquals(ret, ExecState.CREATE)
         delete(inserted, port, area)
+
+
+class TestTideItem(TestCase):
+    def test_to_dict(self):
+        time = datetime.datetime.now().time()
+        height = random.random()*10
+        ti_dict = TideItem(time, height).to_dict()
+        self.assertDictEqual(
+            ti_dict, {TideItem.TIME: str(time), TideItem.HEIGHT: height})
+
+    def test_to_dict_none(self):
+        """TideItem's time and height is None"""
+        ti_dict = TideItem(None, None).to_dict()
+        self.assertDictEqual(
+            ti_dict, {TideItem.TIME: None, TideItem.HEIGHT: None})
+
+    def test_from_dict(self):
+        time = datetime.datetime.now().time()
+        height = random.random()*10
+        ti = TideItem.from_dict(
+            {TideItem.TIME: str(time), TideItem.HEIGHT: height})
+        self.assertEquals(ti.time, time)
+        self.assertEquals(ti.height, height)
+
+    def test_from_dict_value_none(self):
+        """dict values are none"""
+        ti = TideItem.from_dict({TideItem.TIME: None, TideItem.HEIGHT: None})
+        self.assertIsNone(ti.time)
+        self.assertIsNone(ti.height)
 
 
 class TestLCUtilGet(TestCase):
