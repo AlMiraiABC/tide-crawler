@@ -67,6 +67,25 @@ def add_port(province: LCProvince, save: bool = True):
     return port
 
 
+def add_tide(port: LCPort, save: bool = True):
+    def ti(t: datetime.time = datetime.datetime.now().time(), h: float = random.random()*10):
+        return TideItem(t, h)
+    area = add_area()
+    province = add_province(area)
+    port = add_port(province)
+    day = [ti(datetime.time(i)) for i in range(24)]
+    limit = [ti(datetime.time(i)) for i in random.sample(range(24), 3)]
+    tide = LCTide()
+    tide.limit = limit
+    tide.day = day
+    tide.date = datetime.datetime.now()
+    tide.port = port
+    tide.datum = random.random()*random.randint(-10, 10)
+    if save:
+        tide.save()
+    return tide, day, limit
+
+
 class TestLCUtilInit(TestCase):
     def test_init(self):
         lc = LCUtil()
@@ -237,6 +256,20 @@ class TestLCUtilAdd(TestCase):
         (ret, inserted) = self.lc.add_port(port, 'id')
         self.assertEquals(ret, ExecState.CREATE)
         delete(inserted, port, area)
+
+    def test_add_tide_get_set_tideitem(self):
+        """add_tide and verify __to_dicts when set"""
+        def convert(tideitems):
+            return [tideitem.__dict__ for tideitem in tideitems]
+        area = add_area()
+        province = add_province(area)
+        port = add_port(province)
+        (tide, day, limit) = add_tide(port, save=False)
+        (ret, inserted) = self.lc.add_tide(tide, 'id')
+        self.assertEquals(ret, ExecState.CREATE)
+        self.assertListEqual(convert(day), convert(inserted.day))
+        self.assertListEqual(convert(limit), convert(inserted.limit))
+        delete(inserted, port, province, area)
 
 
 class TestTideItem(TestCase):
