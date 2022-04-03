@@ -52,8 +52,7 @@ Create classes with columns as blow.
     rid|String|√
     province|Pointer|√|Province
     zone|String|√
-    lat|Number|√
-    lon|Number|√
+    geopoint|GeoPoint|√
 
 * Tide
     name|type|required|associated

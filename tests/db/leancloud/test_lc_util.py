@@ -83,6 +83,7 @@ class TestLCUtilAdd(TestCase):
         self.lc.logout()
 
     def test_try_insert(self):
+        # TODO Forbidden writing by object's ACL
         """insert objects successfully."""
         def save(o):
             o = LCArea()
@@ -98,6 +99,7 @@ class TestLCUtilAdd(TestCase):
         delete(inserted)
 
     def test_try_insert_update(self):
+        # TODO Forbidden writing by object's ACL
         """insert objects but exists, update it."""
         def save(o):
             o.raw = arean.raw
@@ -134,7 +136,7 @@ class TestLCUtilAdd(TestCase):
         (ret, updated) = self.lc.add_area(area, 'id')
         self.assertEquals(ret, ExecState.UPDATE)
         self.assertEquals(updated.name, area.name)
-        delete(area)
+        delete(updated)
 
     def test_add_area_rid_unexist(self):
         """add_area compared by rid and unexist so create it."""
@@ -142,7 +144,7 @@ class TestLCUtilAdd(TestCase):
         (ret, inserted) = self.lc.add_area(area, 'rid')
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.rid, area.rid)
-        delete(area)
+        delete(inserted)
 
     def test_add_area_rid_exist(self):
         """add_area compared by rid but unexist so update it."""
@@ -164,7 +166,7 @@ class TestLCUtilAdd(TestCase):
         (ret, inserted) = self.lc.add_province(province, 'id')
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.id, area.id)
-        delete(province, area)
+        delete(inserted, area)
 
     def test_add_province_area_unexist(self):
         """add_province failed and raise exception becase area doesn't exist."""
@@ -187,15 +189,39 @@ class TestLCUtilAdd(TestCase):
         (ret, inserted) = self.lc.add_province(province, 'rid')
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.id, area.id)
-        delete(province, area)
+        delete(inserted, area)
 
-    def test_add_port_province_unexist(self):
+    def test_add_port_geo_geopoint(self):
         """
-        add_port
-        province exists
-        so create it.
+        add_port successfully with a GeoPoint type
         """
-        province = LCProvince()
+        area = add_area()
+        province = add_province(area)
+        port = LCPort()
+        port.raw = random_str()
+        port.rid = random_str()
+        port.province = province
+        port.zone = random_str()
+        port.geopoint = leancloud.GeoPoint(0, 0)
+        (ret, inserted) = self.lc.add_port(port, 'id')
+        self.assertEquals(ret, ExecState.CREATE)
+        delete(inserted, port, area)
+
+    def test_add_port_geo_tuple(self):
+        """
+        add_port successfully with a GeoPoint type
+        """
+        area = add_area()
+        province = add_province(area)
+        port = LCPort()
+        port.raw = random_str()
+        port.rid = random_str()
+        port.province = province
+        port.zone = random_str()
+        port.geopoint = (0, 0)
+        (ret, inserted) = self.lc.add_port(port, 'id')
+        self.assertEquals(ret, ExecState.CREATE)
+        delete(inserted, port, area)
 
 
 class TestLCUtilGet(TestCase):
