@@ -1,17 +1,21 @@
 from datetime import date, datetime, timedelta
-from typing import Any, Callable, List, Optional, Tuple, Type, Union, overload
+from typing import (Any, Callable, List, Optional, Tuple, Type, TypeVar, Union,
+                    overload)
 
 from config import LCSetting
 from db.basedbutil import IDT, BaseDbUtil, switch_idt
 from db.common import ExecState
-from db.leancloud.lc_model import (LCArea, LCBaseClazz, LCPort, LCProvince,
-                                   LCTide, LCWithInfo)
+from db.leancloud.lc_model import (LCArea, LCPort, LCProvince, LCTide,
+                                   LCWithInfo)
 from db.model import Area, BaseClazz, Port, Province, Tide, WithInfo
 from util.logger import Logger
 from util.validate import Value
 
 import leancloud
 from leancloud import LeanCloudError, Query
+
+_Clazz = TypeVar('_Clazz', bound=LCWithInfo)
+_ObjClazz = TypeVar('_ObjClazz', bound=WithInfo)
 
 
 class LCUtil(BaseDbUtil):
@@ -68,7 +72,14 @@ class LCUtil(BaseDbUtil):
         user = leancloud.User.get_current()
         user and user.logout()
 
-    def __save(self, obj: LCBaseClazz):
+    def __save(self, obj: _Clazz) -> Tuple[ExecState, Optional[_Clazz]]:
+        """
+        Save this leancloud object :param:`obj`
+
+        :param obj: Leancloud object instance.
+        :returns: 1. execute state
+                  2. saved instance or none if failed.
+        """
         try:
             obj.save()
             self.logger.debug(
@@ -79,10 +90,19 @@ class LCUtil(BaseDbUtil):
                               exc_info=True, stack_info=True)
             return ExecState.FAIL, None
 
-    def __get(self, obj: LCWithInfo, col: IDT, clazz: Type[LCBaseClazz], rid_query: Callable[[], LCBaseClazz] = None):
+    def __get(self, obj: _ObjClazz, col: IDT, clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None):
+        """Wrapper for :fun:`__get_by_id` to get `objid` from :param:`obj`"""
         return self.__get_by_id(switch_idt(col, obj.id, obj.rid), col, clazz, rid_query)
 
-    def __get_by_id(self, objid: str, col: IDT, clazz: Type[LCBaseClazz], rid_query: Callable[[], LCBaseClazz] = None) -> Tuple[ExecState, Optional[LCBaseClazz]]:
+    def __get_by_id(self, objid: str, col: IDT, clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None) -> Tuple[ExecState, Optional[_Clazz]]:
+        """
+        Get a saved leancloud object instance.
+
+        :param objid: Object id or rid to get.
+        :param col: Compared column. Determine :param:`objid` is `id` or `rid`
+        :param clazz: Type of this leancloud object.
+        :param rid_query: :class:`Query` to get a leancloud object instance if `col=='rid'`
+        """
         q: Query = clazz.query
         rid_query = rid_query if callable(
             rid_query) else lambda: q.equal_to(clazz.RID, objid).first()
@@ -112,14 +132,14 @@ class LCUtil(BaseDbUtil):
         self.logger.error(errmsg, exc_info=True, stack_info=True)
         return err_cb()
 
-    def __before_save(self, obj: Optional[BaseClazz], find: Optional[LCBaseClazz], clazz: Type[LCBaseClazz]) -> LCBaseClazz:
+    def __before_save(self, obj: Optional[_ObjClazz], find: Optional[_Clazz], clazz: Type[_Clazz]) -> _Clazz:
         if find is None:
-            if isinstance(obj, LCBaseClazz):
+            if isinstance(obj, clazz):
                 return obj
             return clazz()
         return find
 
-    def try_insert(self, obj: WithInfo, col: IDT, save: Callable[[Optional[LCWithInfo]], LCWithInfo], clazz: Type[LCWithInfo], rid_query: Callable[[], LCBaseClazz] = None) -> Tuple[ExecState, Optional[WithInfo]]:
+    def try_insert(self, obj: _ObjClazz, col: IDT, save: Callable[[Optional[_Clazz]], _Clazz], clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None) -> Tuple[ExecState, Optional[_Clazz]]:
         """
         Try to insert :param:`obj`, or update if exists.
 
