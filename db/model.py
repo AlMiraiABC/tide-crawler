@@ -166,6 +166,9 @@ class TideItem():
         height = value.get(TideItem.HEIGHT)
         return TideItem(time, height)
 
+    def __repr__(self) -> str:
+        return self.to_dict()
+
 
 class Tide(BaseClazz):
     """Tide data of one day."""

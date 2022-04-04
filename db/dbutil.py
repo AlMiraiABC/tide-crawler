@@ -2,7 +2,7 @@ from datetime import date
 from typing import List, Optional, Tuple, Union
 
 from config import STORAGE, Storages
-from util.singleton import Singleton
+from util.singleton import singleton
 from util.validate import Value
 
 from db.basedbutil import IDT, BaseDbUtil
@@ -13,6 +13,7 @@ from db.rdb.rdb_util import RDBUtil
 from leancloud.object_ import Object
 
 
+@singleton
 class DbUtil(BaseDbUtil):
     """Wrapper for all storage operations."""
 
@@ -94,6 +95,3 @@ class DbUtil(BaseDbUtil):
 
     def get_ports(self, province: Union[Province, str], col: IDT = None) -> List[Port]:
         return self.db_util.get_ports(province, col)
-
-
-db_util: DbUtil = Singleton(DbUtil)

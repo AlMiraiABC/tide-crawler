@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import date
 from enum import Enum, auto
-from typing import Any, Callable, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from db.common import ExecState
 from db.model import Area, Port, Province, Tide

@@ -1,16 +1,8 @@
-from typing import Type, TypeVar
+def singleton(cls):
+    instances = {}
 
-_T = TypeVar("_T")
-
-
-# TODO set *args, **kwargs to create instance.
-class Singleton(object):
-    _instance = None
-
-    def __new__(cls: Type[_T]) -> _T:
-        if cls._instance is None:
-            cls._instance = object.__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
-        super().__init__()
+    def getinstance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+    return getinstance
