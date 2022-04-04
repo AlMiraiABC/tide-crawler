@@ -101,7 +101,7 @@ class LCUtil(BaseDbUtil):
         :param objid: Object id or rid to get.
         :param col: Compared column. Determine :param:`objid` is `id` or `rid`
         :param clazz: Type of this leancloud object.
-        :param rid_query: :class:`Query` to get a leancloud object instance if `col=='rid'`
+        :param rid_query: :class:`Query` to get a leancloud object instance if `col==IDT.RID`
         """
         q: Query = clazz.query
         rid_query = rid_query if callable(
@@ -344,7 +344,8 @@ class LCUtil(BaseDbUtil):
 
     def __get_ports_province_clazz(self, province: Province) -> List[LCPort]:
         if province is None or Value.is_any_none_or_whitespace(province.objectId):
-            raise ValueError('province and province.objectId cannot be none or empty.')
+            raise ValueError(
+                'province and province.objectId cannot be none or empty.')
         q: Query = LCPort.query
         try:
             return q.equal_to(LCPort.PROVINCE, province).find()
