@@ -41,11 +41,11 @@ class CWithInfo(CBase, WithInfo):
 
     @property
     def rid(self) -> Optional[str]:
-        return self.rid
+        return self._rid
 
     @rid.setter
     def rid(self, value: str):
-        self.rid = value
+        self._rid = value
 
     @property
     def name(self) -> Optional[str]:
