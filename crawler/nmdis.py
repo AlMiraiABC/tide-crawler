@@ -1,13 +1,12 @@
 import re
 from datetime import date, datetime, time
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import aiohttp
-import requests
 from config import Headers
-from db.basedbutil import IDT
-from db.dbutil import DbUtil
-from db.model import Area, Port, Province, Tide, TideItem, TideItemDict
+# from db.basedbutil import IDT
+# from db.dbutil import DbUtil
+from db.model import Area, Port, Province, Tide, TideItem
 from util.logger import Logger
 
 from crawler.c_model import CArea, CPort, CProvince, CTide
@@ -27,12 +26,19 @@ class Nmdis:
     def __init__(self) -> None:
         self.logger = Logger(self.__class__.__name__).logger
 
-    async def get_tide(self, port_code: str, query_date: date = datetime.now().date()) -> Tide:
+    async def __err_msg(self, method: str, url: str, response: aiohttp.ClientResponse) -> str:
+        return f"{method} {url} <{response.status}><{await response.text()}>"
+
+    async def __info_msg(self, method: str, url: str, response: aiohttp.ClientResponse) -> str:
+        return f"{method} {url} <{await response.text()}>"
+
+    async def get_tide(self, port_code: str, query_date: date = datetime.now().date()) -> Optional[Tide]:
         """
         Query tide infos of specified port and date.
 
-        :param port_code: port id or code.
+        :param port_code: Port id or code.
         :param query_date: Queried date
+        :return: Return None if failed.
         """
         url = f'{Nmdis.__BASE_URL}/chaoxidata/list'
         reqbody = {
@@ -42,35 +48,62 @@ class Nmdis:
         async with aiohttp.ClientSession() as session:
             async with session.post(url=url, headers=Headers.NMDIS, json=reqbody) as response:
                 if response.status != 200:
-                    self.logger.error(
-                        f"post {url} <{response.status}><{await response.text()}>")
-                    return
-                self.logger.info(f"post {url} <{await response.text()}>")
+                    self.logger.error(await self.__err_msg('post', url, response))
+                    return None
+                self.logger.info(self.__info_msg('post', url, response))
                 content: Dict[str, Any] = await response.json()
                 if not content.get('success'):
                     self.logger.error(f'{content}')
+                    return None
                 data: Dict[str, Any] = content.get('data')[0]
                 filedata: Dict[str, Union[int, str]] = data.get('filedata')
                 day, limit = self.__get_tide_data(filedata)
                 datum = self.__get_datum(data.get('benchmark'))
                 zone: str = data.get('timearea')
                 tide = CTide()
+                datetime.fromisoformat
+                tide.date = datetime.fromisoformat(
+                    data.get('serchdate'))  # YES, It's serchdate
                 tide.day = day
                 tide.limit = limit
                 tide.zone = zone
                 tide.datum = datum
-                tide.port = DbUtil().get_port(port_code, IDT.RID)
-                tide.raw = response.text
+                tide.port = CPort()
+                tide.port.rid = port_code
+                # tide.port = DbUtil().get_port(port_code, IDT.RID)
+                tide.raw = await response.text()
                 return tide
 
-    def get_provinces(self, area_code: str) -> List[Province]:
+    async def get_provinces(self, area_code: str) -> Optional[List[Province]]:
         """
         Get all provinces belongs to area.
 
         :param area_code: area id or code.
+        :return: Return None if failed.
         """
         url = f'{Nmdis.__BASE_URL}/area/list?parentId={area_code}'
-        resp = requests.get(url=url, headers=Headers)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url=url, headers=Headers.NMDIS) as response:
+                if response.status != 200:
+                    self.logger.error(self.__err_msg('get', url, response))
+                    return None
+                self.logger.info(self.__info_msg('get', url, response))
+                content = await response.json()
+                if not content.get('success') or not isinstance(content.get('data'), list):
+                    self.logger.error(f'{content}')
+                    return None
+                provinces: List[Province] = []
+                data: List[Dict[str, Any]] = content.get('data')
+                for item in data:
+                    province = CProvince()
+                    province.rid = item.get('id')
+                    province.name = item.get('areaname')
+                    province.raw = await response.text()
+                    province.area = CArea()
+                    province.area.rid = area_code
+                    # province.area = DbUtil().get_area(area_code, IDT.RID)
+                    provinces.append(province)
+                return provinces
 
     def __get_datum(self, text: str) -> float:
         """
