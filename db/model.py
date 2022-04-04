@@ -4,7 +4,7 @@ base model class definitions
 
 import datetime
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Optional, TypedDict, TypeVar
+from typing import Any, List, Optional, Tuple, TypedDict
 
 from util.validate import Value
 
@@ -95,11 +95,7 @@ class Province(WithInfo, ABC):
         pass
 
 
-# Generic type of GeoPoint
-TGP = TypeVar('TGP')
-
-
-class Port(WithInfo, Generic[TGP]):
+class Port(WithInfo):
     """Port infomations."""
 
     @property
@@ -128,13 +124,13 @@ class Port(WithInfo, Generic[TGP]):
 
     @property
     @abstractmethod
-    def geopoint(self) -> Optional[TGP]:
+    def geopoint(self) -> Optional[Tuple[float, float]]:
         """Get port coordinate."""
         pass
 
     @geopoint.setter
     @abstractmethod
-    def geopoint(self, value: TGP):
+    def geopoint(self, value: Tuple[float, float]):
         """Set port coordinate."""
         pass
 

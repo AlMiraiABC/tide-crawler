@@ -7,7 +7,7 @@ https://leancloud.cn/docs/leanstorage_guide-python.html#hash23473483
 """
 
 import datetime
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, TideItemDict, WithInfo
 
@@ -118,12 +118,13 @@ class LCPort(LCWithInfo, Port):
         self.set(LCPort.ZONE, value)
 
     @property
-    def geopoint(self) -> GeoPoint:
-        return self.get(LCPort.GEOPOINT)
+    def geopoint(self) -> Tuple[float, float]:
+        gp: GeoPoint = self.get(LCPort.GEOPOINT)
+        return gp.latitude, gp.longitude
 
     @geopoint.setter
-    def geopoint(self, value: GeoPoint):
-        self.set(LCPort.GEOPOINT, value)
+    def geopoint(self, value: Tuple[float, float]):
+        self.set(LCPort.GEOPOINT, GeoPoint(value[0], value[1]))
 
 
 @Object.as_class("Tide")

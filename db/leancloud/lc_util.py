@@ -204,8 +204,7 @@ class LCUtil(BaseDbUtil):
             o.raw = port.raw
             o.name = port.name
             o.rid = port.rid
-            o.geopoint = port.geopoint if type(port.geopoint) == leancloud.GeoPoint else leancloud.GeoPoint(
-                port.geopoint[0], port.geopoint[1])
+            o.geopoint = port.geopoint
             o.province = province
             o.zone = port.zone
             return o
@@ -237,7 +236,7 @@ class LCUtil(BaseDbUtil):
 
     def get_area(self, area_id: str, col: IDT) -> Optional[LCArea]:
         try:
-            return self.__get_by_id(area_id, col, LCArea)
+            return self.__get_by_id(area_id, col, LCArea)[1]
         except Exception as ex:
             self.logger.error(f"get area {area_id} failed. {ex}",
                               exc_info=True, stack_info=True)
@@ -245,20 +244,17 @@ class LCUtil(BaseDbUtil):
 
     def get_province(self, province_id: str, col: IDT) -> Optional[LCProvince]:
         try:
-            return self.__get_by_id(province_id, col, LCProvince)
+            return self.__get_by_id(province_id, col, LCProvince)[1]
         except Exception as ex:
             self.logger.error(f"get province {province_id} failed. {ex}",
                               exc_info=True, stack_info=True)
         return None
 
-    def get_port(self, port_rid: str = None) -> Optional[LCPort]:
-        query: Query = LCPort.query
+    def get_port(self, port_id: str, col: IDT) -> Optional[LCPort]:
         try:
-            port: LCPort = query.equal_to(
-                LCPort.RID, port_rid).include(LCPort).first()
-            return port
+            return self.__get_by_id(port_id, col, LCPort)[1]
         except Exception as ex:
-            self.logger.error(f"get port {port_rid} failed. {ex}",
+            self.logger.error(f"get port {port_id} failed. {ex}",
                               exc_info=True, stack_info=True)
         return None
 
@@ -347,7 +343,7 @@ class LCUtil(BaseDbUtil):
 
     def __get_ports_province_clazz(self, province: Province) -> List[LCPort]:
         if province is None or Value.is_any_none_or_whitespace(province.objectId):
-            raise ValueError('area or area.objectId cannot be none or empty.')
+            raise ValueError('province and province.objectId cannot be none or empty.')
         q: Query = LCPort.query
         try:
             return q.equal_to(LCPort.PROVINCE, province).find()
