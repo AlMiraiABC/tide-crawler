@@ -3,7 +3,7 @@ import random
 from unittest import TestCase
 
 from db.common import ExecState
-from db.leancloud.lc_model import LCArea, LCPort, LCProvince, LCTide
+from db.leancloud.lc_model import LCArea, LCBaseClazz, LCPort, LCProvince, LCTide, LCWithInfo
 from db.leancloud.lc_util import LCUtil
 
 import leancloud
@@ -44,24 +44,12 @@ def add_province(area: LCArea, save: bool = True):
 
 def add_port(province: LCProvince, save: bool = True):
     port = LCPort()
-    port.raw = random_str()
-    port.rid = random_str()
-    port.province = province
-    port.zone = random_str()
-    port.geopoint = leancloud.GeoPoint(0, 0)
-    if save:
-        port.save()
-    return port
-
-
-def add_port(province: LCProvince, save: bool = True):
-    port = LCPort()
-    port.province = province
-    port.zone = random_str()
-    port.raw = random_str()
     port.name = random_str()
+    port.raw = random_str()
     port.rid = random_str()
-    port.geopoint = leancloud.GeoPoint(0, 0)
+    port.province = province
+    port.zone = random_str()
+    port.geopoint = (0, 0)
     if save:
         port.save()
     return port
@@ -70,9 +58,6 @@ def add_port(province: LCProvince, save: bool = True):
 def add_tide(port: LCPort, save: bool = True):
     def ti(t: datetime.time = datetime.datetime.now().time(), h: float = random.random()*10):
         return TideItem(t, h)
-    area = add_area()
-    province = add_province(area)
-    port = add_port(province)
     day = [ti(datetime.time(i)) for i in range(24)]
     limit = [ti(datetime.time(i)) for i in random.sample(range(24), 3)]
     tide = LCTide()
@@ -148,7 +133,7 @@ class TestLCUtilAdd(TestCase):
         arean.raw = random_str()
         (ret, updated) = self.lc.try_insert(arean, 'rid', save, LCArea)
         self.assertEquals(ret, ExecState.UPDATE)
-        self.assertEquals(updated.objectId, area.id)
+        self.assertEquals(updated.objectId, area.objectId)
         self.assertEquals(updated.name, arean.name)
         delete(updated)
 
@@ -162,7 +147,7 @@ class TestLCUtilAdd(TestCase):
     def test_add_area_id_exist(self):
         """add_area compared by id and exist so update it."""
         area = add_area()
-        id = area.id  # get new id
+        id = area.objectId  # get new id
         area = LCArea.create_without_data(id)
         area.raw = random_str()
         area.name = random_str()
@@ -195,11 +180,11 @@ class TestLCUtilAdd(TestCase):
     def test_add_province_area_exist(self):
         """add_province by id """
         area = add_area()
-        a = LCArea.create_without_data(area.id)
+        a = LCArea.create_without_data(area.objectId)
         province = add_province(a, False)
         (ret, inserted) = self.lc.add_province(province, 'id')
         self.assertEquals(ret, ExecState.CREATE)
-        self.assertEquals(inserted.area.id, area.id)
+        self.assertEquals(inserted.area.objectId, area.objectId)
         delete(inserted, area)
 
     def test_add_province_area_unexist(self):
@@ -222,40 +207,8 @@ class TestLCUtilAdd(TestCase):
         province = add_province(a, False)
         (ret, inserted) = self.lc.add_province(province, 'rid')
         self.assertEquals(ret, ExecState.CREATE)
-        self.assertEquals(inserted.area.id, area.id)
+        self.assertEquals(inserted.area.objectId, area.objectId)
         delete(inserted, area)
-
-    def test_add_port_geo_geopoint(self):
-        """
-        add_port successfully with a GeoPoint type
-        """
-        area = add_area()
-        province = add_province(area)
-        port = LCPort()
-        port.raw = random_str()
-        port.rid = random_str()
-        port.province = province
-        port.zone = random_str()
-        port.geopoint = leancloud.GeoPoint(0, 0)
-        (ret, inserted) = self.lc.add_port(port, 'id')
-        self.assertEquals(ret, ExecState.CREATE)
-        delete(inserted, port, area)
-
-    def test_add_port_geo_tuple(self):
-        """
-        add_port successfully with a GeoPoint type
-        """
-        area = add_area()
-        province = add_province(area)
-        port = LCPort()
-        port.raw = random_str()
-        port.rid = random_str()
-        port.province = province
-        port.zone = random_str()
-        port.geopoint = (0, 0)
-        (ret, inserted) = self.lc.add_port(port, 'id')
-        self.assertEquals(ret, ExecState.CREATE)
-        delete(inserted, port, area)
 
     def test_add_tide_get_set_tideitem(self):
         """add_tide and verify __to_dicts when set"""
@@ -313,3 +266,61 @@ class TestLCUtilGet(TestCase):
     def tearDownClass(cls) -> None:
         cls.lc.logout()
         return super().tearDownClass()
+
+    def _assert_base(self, a: LCBaseClazz, b: LCBaseClazz):
+        self.assertEquals(a.objectId, b.objectId)
+        self.assertEquals(a.raw, b.raw)
+
+    def _assert_with_info(self, a: LCWithInfo, b: LCWithInfo):
+        self._assert_base(a, b)
+        self.assertEquals(a.rid, b.rid)
+        self.assertEquals(a.name, b.name)
+
+    def test_get_area_id(self):
+        area = add_area()
+        a = self.lc.get_area(area.objectId, 'id')
+        self._assert_with_info(area, a)
+
+    def test_get_area_rid(self):
+        area = add_area()
+        a = self.lc.get_area(area.rid, 'rid')
+        self._assert_with_info(area, a)
+
+    def test_get_province_id(self):
+        area = add_area()
+        province = add_province(area)
+        p = self.lc.get_province(province.objectId, 'id')
+        self._assert_with_info(province, p)
+        self._assert_with_info(area, p.area)
+
+    def test_get_province_rid(self):
+        area = add_area()
+        province = add_province(area)
+        p = self.lc.get_province(province.rid, 'rid')
+        self._assert_with_info(province, p)
+        self._assert_with_info(area, p.area)
+
+    def test_get_port_id(self):
+        area = add_area()
+        province = add_province(area)
+        port = add_port(province)
+        p = self.lc.get_port(port.objectId, 'id')
+        self._assert_with_info(port, p)
+        self._assert_with_info(province, p.province)
+
+    def test_get_port_rid(self):
+        area = add_area()
+        province = add_province(area)
+        port = add_port(province)
+        p = self.lc.get_port(port.objectId, 'id')
+        self._assert_with_info(port, p)
+        self._assert_with_info(province, p.province)
+
+    def test_get_tide(self):
+        area = add_area()
+        province = add_province(area)
+        port = add_port(province)
+        (tide, _, _) = add_tide(port)
+        t = self.lc.get_tide(port.objectId, tide.date.date())
+        self.assertIsNotNone(t)  # may return earlier or later row
+        self.assertEquals(t.port.objectId, port.objectId)
