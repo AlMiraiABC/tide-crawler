@@ -1,5 +1,6 @@
 import datetime
 import random
+from typing import Iterable, Iterator
 from unittest import TestCase
 
 from db.common import ExecState
@@ -85,6 +86,7 @@ class TestLCUtilInit(TestCase):
 
 
 class TestLCUtilAdd(TestCase):
+    """LCUtil.add_*"""
     lc: LCUtil = None
 
     @classmethod
@@ -255,6 +257,7 @@ class TestTideItem(TestCase):
 
 
 class TestLCUtilGet(TestCase):
+    """LCUtil.get_* which return one object."""
     lc: LCUtil = None
 
     @classmethod
@@ -280,11 +283,13 @@ class TestLCUtilGet(TestCase):
         area = add_area()
         a = self.lc.get_area(area.objectId, 'id')
         self._assert_with_info(area, a)
+        delete(area)
 
     def test_get_area_rid(self):
         area = add_area()
         a = self.lc.get_area(area.rid, 'rid')
         self._assert_with_info(area, a)
+        delete(area)
 
     def test_get_province_id(self):
         area = add_area()
@@ -292,6 +297,7 @@ class TestLCUtilGet(TestCase):
         p = self.lc.get_province(province.objectId, 'id')
         self._assert_with_info(province, p)
         self._assert_with_info(area, p.area)
+        delete(province, area)
 
     def test_get_province_rid(self):
         area = add_area()
@@ -299,6 +305,7 @@ class TestLCUtilGet(TestCase):
         p = self.lc.get_province(province.rid, 'rid')
         self._assert_with_info(province, p)
         self._assert_with_info(area, p.area)
+        delete(province, area)
 
     def test_get_port_id(self):
         area = add_area()
@@ -307,6 +314,7 @@ class TestLCUtilGet(TestCase):
         p = self.lc.get_port(port.objectId, 'id')
         self._assert_with_info(port, p)
         self._assert_with_info(province, p.province)
+        delete(port, province, area)
 
     def test_get_port_rid(self):
         area = add_area()
@@ -315,6 +323,7 @@ class TestLCUtilGet(TestCase):
         p = self.lc.get_port(port.objectId, 'id')
         self._assert_with_info(port, p)
         self._assert_with_info(province, p.province)
+        delete(port, province, area)
 
     def test_get_tide(self):
         area = add_area()
@@ -324,3 +333,83 @@ class TestLCUtilGet(TestCase):
         t = self.lc.get_tide(port.objectId, tide.date.date())
         self.assertIsNotNone(t)  # may return earlier or later row
         self.assertEquals(t.port.objectId, port.objectId)
+        delete(tide, port, province, area)
+
+
+class TestLCUtilGetList(TestCase):
+    """LCUtil.get_* which return a list."""
+    lc: LCUtil = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.lc = LCUtil()
+        return super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.lc.logout()
+        return super().tearDownClass()
+
+    def assertSubset(self, a: Iterable, b: Iterable):
+        """self.assertTrue(a.issubset(b))"""
+        seta = set(a)
+        self.assertTrue(seta.issubset(b))
+
+    def _id_sets(self, objects: Iterator[LCBaseClazz]) -> set:
+        return {i.objectId for i in objects}
+
+    def test_get_areas(self):
+        areas1 = [add_area() for _ in range(2)]
+        areas2 = self.lc.get_areas()
+        self.assertSubset(self._id_sets(areas1), self._id_sets(areas2))
+        delete(*areas1)
+
+    def test_get_provinces_area(self):
+        """get provinces by Area instance."""
+        area = add_area()
+        provinces1 = [add_province(area) for _ in range(2)]
+        provinces2 = self.lc.get_provinces(area)
+        self.assertSetEqual(self._id_sets(provinces1),
+                            self._id_sets(provinces2))
+        delete(*provinces1, area)
+
+    def test_get_provinces_str_id(self):
+        area = add_area()
+        provinces1 = [add_province(area) for _ in range(2)]
+        provinces2 = self.lc.get_provinces(area.objectId, 'id')
+        self.assertSetEqual(self._id_sets(provinces1),
+                            self._id_sets(provinces2))
+        delete(*provinces1, area)
+
+    def test_get_provinces_str_rid(self):
+        area = add_area()
+        provinces1 = [add_province(area) for _ in range(2)]
+        provinces2 = self.lc.get_provinces(area.rid, 'rid')
+        self.assertSetEqual(self._id_sets(provinces1),
+                            self._id_sets(provinces2))
+        delete(*provinces1, area)
+
+    def test_get_ports_province(self):
+        """get ports by Province instance"""
+        area = add_area()
+        province = add_province(area)
+        ports1 = [add_port(province) for _ in range(2)]
+        ports2 = self.lc.get_ports(province)
+        self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
+        delete(*ports1, province, area)
+
+    def test_get_ports_str_id(self):
+        area = add_area()
+        province = add_province(area)
+        ports1 = [add_port(province) for _ in range(2)]
+        ports2 = self.lc.get_ports(province.objectId, 'id')
+        self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
+        delete(*ports1, province, area)
+
+    def test_get_ports_str_rid(self):
+        area = add_area()
+        province = add_province(area)
+        ports1 = [add_port(province) for _ in range(2)]
+        ports2 = self.lc.get_ports(province.rid, 'rid')
+        self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
+        delete(*ports1, province, area)
