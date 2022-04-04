@@ -3,3 +3,4 @@ leancloud
 SQLAlchemy
 urllib3
 pyyaml
+aiohttp
