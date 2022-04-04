@@ -85,13 +85,13 @@ class Province(WithInfo, ABC):
     @property
     @abstractmethod
     def area(self) -> Optional[Area]:
-        """Get related :class:`Area` belongs."""
+        """Get related :class:`Area`."""
         pass
 
     @area.setter
     @abstractmethod
     def area(self, area: Area):
-        """Set related :class:`Area` belongs."""
+        """Set related :class:`Area`."""
         pass
 
 
@@ -101,13 +101,13 @@ class Port(WithInfo):
     @property
     @abstractmethod
     def province(self) -> Optional[Province]:
-        """Get related :class:`Province` belongs."""
+        """Get related :class:`Province`."""
         pass
 
     @province.setter
     @abstractmethod
     def province(self, province: Province):
-        """Set related :class:`Province` belongs."""
+        """Set related :class:`Province`."""
         pass
 
     @property
@@ -200,13 +200,13 @@ class Tide(BaseClazz):
     @property
     @abstractmethod
     def port(self) -> Optional[Port]:
-        """Get tide data related :class:`Port` belongs."""
+        """Get tide data related :class:`Port`."""
         pass
 
     @port.setter
     @abstractmethod
     def port(self, value: Port):
-        """Set tide data related :class:`Port` belongs."""
+        """Set tide data related :class:`Port`."""
         pass
 
     @property

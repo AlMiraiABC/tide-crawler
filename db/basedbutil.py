@@ -117,7 +117,7 @@ class BaseDbUtil(ABC):
     @abstractmethod
     def get_provinces(self, area: Union[Area, str], col: IDT = None) -> List[Province]:
         """
-        Get all :class:`Province`s which area belongs.
+        Get all :class:`Province`s belongs to :param:`area`.
 
         :param area: :class:`Area` instance or :prop:`area.id`
         :param col: Compared column. It's required if type of :param:`area` is `str`
@@ -127,7 +127,7 @@ class BaseDbUtil(ABC):
     @abstractmethod
     def get_ports(self, province: Union[Province, str], col: IDT = None) -> List[Port]:
         """
-        Get all :class:`Port`s which :param:`province` belongs.
+        Get all :class:`Port`s  belongs to:param:`province`.
 
         :param province: :class:`Province` instance or :prop:`province.id/objectId/rid`
         :param col: Compared column. It's required if type of :param:`province` is `str`
