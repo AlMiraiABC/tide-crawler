@@ -75,6 +75,9 @@ class Headers:
     CXB = {
 
     }
+    NMDIS={
+
+    }
 
 
 class LoggerSetting:

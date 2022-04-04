@@ -4,7 +4,8 @@
         "db",
         "util",
         "test",
-        "doc"
+        "doc",
+        "crawler"
     ],
     "python.testing.unittestArgs": [
         "-v",

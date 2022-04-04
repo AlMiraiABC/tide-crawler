@@ -1,27 +1,28 @@
 """Models for crawler"""
 import datetime
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
-from db.dbutil import db_util
-from db.model import Area, BaseClazz, Port, Tide, TideItem, WithInfo
+from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
 
 
 class CBase(BaseClazz):
-    def __init__(self, raw: Any) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._raw = raw
+        self._raw = None
+        self._created_at = datetime.datetime.now()
+        self._updated_at = datetime.datetime.now()
 
     @property
     def objectId(self) -> Optional[str]:
-        pass
+        return None
 
     @property
     def createdAt(self) -> Optional[datetime.datetime]:
-        pass
+        return self._created_at
 
     @property
     def updatedAt(self) -> Optional[datetime.datetime]:
-        pass
+        return self._updated_at
 
     @property
     def raw(self) -> Optional[Any]:
@@ -29,14 +30,14 @@ class CBase(BaseClazz):
 
     @raw.setter
     def raw(self, data: Any):
-        self.raw = data
+        self._raw = data
 
 
 class CWithInfo(CBase, WithInfo):
-    def __init__(self, raw: Any, rid: str, name: str) -> None:
-        super().__init__(raw)
-        self._rid = rid
-        self._name = name
+    def __init__(self) -> None:
+        super().__init__()
+        self._rid: str = None
+        self._name: str = None
 
     @property
     def rid(self) -> Optional[str]:
@@ -56,24 +57,39 @@ class CWithInfo(CBase, WithInfo):
 
 
 class CArea(CWithInfo, Area):
-    def __init__(self, raw: Any, rid: str, name: str) -> None:
-        super().__init__(raw, rid, name)
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class CProvince(CWithInfo, Province):
+    def __init__(self) -> None:
+        super().__init__()
+        self._area: Area = None
+
+    @property
+    def area(self) -> Optional[Area]:
+        return self._area
+
+    @area.setter
+    def area(self, value: Area):
+        self._area = value
 
 
 class CPort(CWithInfo, Port):
 
-    def __init__(self, raw: Any, rid: str, name: str, area: Union[Area, str], geopoint: Tuple[float, float]) -> None:
-        super().__init__(raw, rid, name)
-        self._area = db_util.get_area(area) if type(area) == str else area
-        self._geopoint = geopoint
+    def __init__(self) -> None:
+        super().__init__()
+        self._province: Province = None
+        self._geopoint: Tuple[float, float] = None
+        self._zone: str = None
 
     @property
-    def area(self) -> Optional[Area]:
-        self._area
+    def province(self) -> Optional[Province]:
+        self._province
 
-    @area.setter
-    def area(self, area: Union[Area, str]):
-        self._area = db_util.get_area(area) if type(area) == str else area
+    @province.setter
+    def province(self, value: Province):
+        self._province = value
 
     @property
     def geopoint(self) -> Optional[Tuple[float, float]]:
@@ -86,14 +102,13 @@ class CPort(CWithInfo, Port):
 
 class CTide(Tide, CBase):
 
-    def __init__(self, raw: Any, day: List[TideItem], limit: List[TideItem], zone: str, datum: float, port: Union[Port, str], date: datetime.date = datetime.datetime.now().date) -> None:
-        super.__init__(raw)
-        self._day = day
-        self._limit = limit
-        self._zone = zone
-        self._datum = datum
-        self._port = db_util.get_port(port) if type(port) == str else port
-        self._date = date
+    def __init__(self) -> None:
+        super().__init__()
+        self._day: List[TideItem] = []
+        self._limit: List[TideItem] = []
+        self._datum: float = None
+        self._port: Port = None
+        self._date: datetime.date = datetime.datetime.now()
 
     @property
     def day(self) -> Optional[List[TideItem]]:
@@ -113,15 +128,15 @@ class CTide(Tide, CBase):
 
     @property
     def port(self) -> Optional[Port]:
-        return self.port
+        return self._port
 
     @port.setter
-    def port(self, value: Union[Port, str]):
-        self.port = db_util.get_port(value) if type(value) == str else value
+    def port(self, value: Port):
+        self._port = value
 
     @property
     def date(self) -> Optional[datetime.datetime]:
-        return self.date
+        return self._date
 
     @date.setter
     def date(self, value: datetime.datetime):
