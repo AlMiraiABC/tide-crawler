@@ -262,7 +262,7 @@ class LCUtil(BaseDbUtil):
         query: Query = LCTide.query
         dt = datetime(d.year, d.month, d.day)
         try:
-            return query.equal_to(LCTide.PORT, port_id) \
+            return query.equal_to(LCTide.PORT, LCTide.create_without_data(port_id)) \
                 .greater_than_or_equal_to(LCTide.DATE, dt) \
                 .less_than(LCTide.DATE, dt+timedelta(1)) \
                 .include(LCPort.__name__) \
