@@ -85,7 +85,7 @@ class CPort(CWithInfo, Port):
 
     @property
     def province(self) -> Optional[Province]:
-        self._province
+        return self._province
 
     @province.setter
     def province(self, value: Province):
@@ -93,7 +93,7 @@ class CPort(CWithInfo, Port):
 
     @property
     def geopoint(self) -> Optional[Tuple[float, float]]:
-        self._geopoint
+        return self._geopoint
 
     @geopoint.setter
     def geopoint(self, value: Tuple[float, float]):
