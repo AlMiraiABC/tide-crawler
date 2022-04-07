@@ -1,11 +1,8 @@
-from typing import Iterable
-
-
 class Value:
     @staticmethod
     def is_any_none_or_empty(*values: any) -> bool:
         """
-        是否存在至少一个值为 ``None`` 或 ``空`` 或 ``False``
+        是否存在至少一个值为 ``None``, ``False``, ``0`` 等可表示为``False``的对象
 
         :param values: 多个值
         :return: 存在则返回 ``True``，否则返回 ``False``
@@ -25,11 +22,11 @@ class Value:
 
         >>> Value.is_any_none_or_whitespace('') # True
         >>> Value.is_any_none_or_whitespace('  ') # True
-        >>> Value.is_any_none_or_whitespace(None) # Talse
+        >>> Value.is_any_none_or_whitespace(None) # True
         >>> Value.is_any_none_or_whitespace('abc') # False
-        >>> Value.is_any_none_or_whitespace(['', 'abc']) # True
-        >>> Value.is_any_none_or_whitespace(['  ', 'abc']) # True
-        >>> Value.is_any_none_or_whitespace(['abc','def']) # False
+        >>> Value.is_any_none_or_whitespace('', 'abc') # True
+        >>> Value.is_any_none_or_whitespace('  ', 'abc') # True
+        >>> Value.is_any_none_or_whitespace('abc','def') # False
         """
         for v in args:
             if not v or not v.strip():
