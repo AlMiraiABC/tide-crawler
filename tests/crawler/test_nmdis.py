@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from unittest import TestCase, IsolatedAsyncioTestCase
 
 from crawler.nmdis import Nmdis
@@ -30,14 +30,24 @@ class TestNmdisAsync(IsolatedAsyncioTestCase):
         self.nmdis = Nmdis()
 
     async def test_get_tide(self):
-        DATE = date(2022, 4, 4)
-        tide = await self.nmdis.get_tide('T020', DATE)
+        DATE = datetime.today().date()
+        PORT_CODE = 'T020'  # Qinhuangdao
+        tide = await self.nmdis.get_tide(PORT_CODE, DATE)
         self.assertIsNotNone(tide)
         self.assertEquals(len(tide.day), 24)
         self.assertEquals(tide.date.date(), DATE)
 
     async def test_get_provinces(self):
-        AREA_CODE = '5010464519851424942'  # China 中国近海海域
+        AREA_CODE = '5010464519851424942'  # China Offshore Areas
         provinces = await self.nmdis.get_provinces(AREA_CODE)
+        # China has 9 provinces, 1 autonomous-regions(Guangxi), 2 municipality(Tianjin, Shanghai)
         self.assertEquals(len(provinces), 12)
-        self.assertEquals
+
+    async def test_get_ports(self):
+        PROVINCE_CODE = '4975833679728738945'  # Hebei
+        ports = await self.nmdis.get_ports(PROVINCE_CODE)
+        self.assertGreater(len(ports), 0)
+
+    async def test_get_areas(self):
+        areas = await self.nmdis.get_areas()
+        self.assertGreater(len(areas), 0)
