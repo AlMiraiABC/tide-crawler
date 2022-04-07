@@ -99,6 +99,14 @@ class CPort(CWithInfo, Port):
     def geopoint(self, value: Tuple[float, float]):
         self._geopoint = value
 
+    @property
+    def zone(self) -> Optional[str]:
+        return self._zone
+
+    @zone.setter
+    def zone(self, value: str):
+        self._zone = value
+
 
 class CTide(Tide, CBase):
 
@@ -141,14 +149,6 @@ class CTide(Tide, CBase):
     @date.setter
     def date(self, value: datetime.datetime):
         self._date = value
-
-    @property
-    def zone(self) -> Optional[str]:
-        return self._zone
-
-    @zone.setter
-    def zone(self, value: str):
-        self._zone = value
 
     @property
     def datum(self) -> Optional[float]:

@@ -59,14 +59,13 @@ class Nmdis:
                 filedata: Dict[str, Union[int, str]] = data.get('filedata')
                 day, limit = self.__get_tide_data(filedata)
                 datum = self.__get_datum(data.get('benchmark'))
-                zone: str = data.get('timearea')
+                # zone: str = data.get('timearea')
                 tide = CTide()
                 datetime.fromisoformat
                 tide.date = datetime.fromisoformat(
                     data.get('serchdate'))  # YES, It's serchdate
                 tide.day = day
                 tide.limit = limit
-                tide.zone = zone
                 tide.datum = datum
                 tide.port = CPort()
                 tide.port.rid = port_code
@@ -78,7 +77,7 @@ class Nmdis:
         """
         Get all provinces belongs to area.
 
-        :param area_code: area id or code.
+        :param area_code: Area id or code.
         :return: Return None if failed.
         """
         url = f'{Nmdis.__BASE_URL}/area/list?parentId={area_code}'
@@ -104,6 +103,38 @@ class Nmdis:
                     # province.area = DbUtil().get_area(area_code, IDT.RID)
                     provinces.append(province)
                 return provinces
+
+    async def get_ports(self, province_code: str) -> Optional[List[Port]]:
+        """
+        Get all ports belongs to province.
+
+        :param province_code: Province id or code.
+        :return: Return None if failed.
+        """
+        url = f'{Nmdis.__BASE_URL}/site/list?areaId={province_code}'
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url=url, headers=Headers.NMDIS) as response:
+                if response.status != 200:
+                    self.logger.error(self.__err_msg('get', url, response))
+                    return None
+                self.logger.info(self.__info_msg('get', url, response))
+                content: dict = await response.json()
+                if not content.get('success') or not isinstance(content.get('data'), list):
+                    self.logger.error(f'{content}')
+                    return None
+                ports: List[Port] = []
+                data: List[Dict[str, Any]] = content.get('data')
+                for item in data:
+                    port = CPort()
+                    port.rid = item.get('code')
+                    port.name = item.get('name')
+                    port.raw = await response.text()
+                    port.province = CProvince()
+                    port.province.rid = province_code
+                    port.geopoint = (item.get('coordx'), item.get('coordy'))
+                    port.zone='' # TODO: get time zone from get_tide response.data.timearea
+                    ports.append(port)
+                return ports
 
     def __get_datum(self, text: str) -> float:
         """
