@@ -10,6 +10,7 @@ from db.model import Area, Port, Province, Tide, TideItem
 from util.logger import Logger
 
 from crawler.c_model import CArea, CPort, CProvince, CTide
+from util.validate import Value
 
 
 class Nmdis:
@@ -40,6 +41,9 @@ class Nmdis:
         :param query_date: Queried date
         :return: Return None if failed.
         """
+        if Value.is_any_none_or_empty(query_date) or Value.is_any_none_or_whitespace(port_code):
+            raise ValueError(
+                'port_code and query_date cannot be none or empty.')
         url = f'{Nmdis.__BASE_URL}/chaoxidata/list'
         reqbody = {
             'serchdate': query_date.strftime('%Y-%m-%d'),  # yyyy-MM-dd
@@ -52,10 +56,11 @@ class Nmdis:
                     return None
                 self.logger.info(self.__info_msg('post', url, response))
                 content: Dict[str, Any] = await response.json()
-                if not content.get('success'):
+                datas = content.get('data')
+                if not content.get('success') or not isinstance(datas, list) or len(datas) == 0:
                     self.logger.error(f'{content}')
                     return None
-                data: Dict[str, Any] = content.get('data')[0]
+                data: Dict[str, Any] = datas[0]
                 filedata: Dict[str, Union[int, str]] = data.get('filedata')
                 day, limit = self.__get_tide_data(filedata)
                 datum = self.__get_datum(data.get('benchmark'))
@@ -79,6 +84,8 @@ class Nmdis:
         :param area_code: Area id or code.
         :return: Return None if failed.
         """
+        if Value.is_any_none_or_whitespace(area_code):
+            raise ValueError(f'area_code cannot be none or empty.')
         url = f'{Nmdis.__BASE_URL}/area/list?parentId={area_code}'
         async with aiohttp.ClientSession() as session:
             async with session.get(url=url, headers=Headers.NMDIS) as response:
@@ -137,6 +144,8 @@ class Nmdis:
         :param province_code: Province id or code.
         :return: Return None if failed.
         """
+        if Value.is_any_none_or_whitespace(province_code):
+            raise ValueError(f'province_code cannot be none or empty.')
         url = f'{Nmdis.__BASE_URL}/site/list?areaId={province_code}'
         async with aiohttp.ClientSession() as session:
             async with session.get(url=url, headers=Headers.NMDIS) as response:

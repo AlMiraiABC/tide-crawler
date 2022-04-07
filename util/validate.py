@@ -3,7 +3,7 @@ from typing import Iterable
 
 class Value:
     @staticmethod
-    def is_any_none_or_empty(values: Iterable) -> bool:
+    def is_any_none_or_empty(*values: any) -> bool:
         """
         是否存在至少一个值为 ``None`` 或 ``空`` 或 ``False``
 
