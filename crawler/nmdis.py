@@ -61,7 +61,6 @@ class Nmdis:
                 datum = self.__get_datum(data.get('benchmark'))
                 # zone: str = data.get('timearea')
                 tide = CTide()
-                datetime.fromisoformat
                 tide.date = datetime.fromisoformat(
                     data.get('serchdate'))  # YES, It's serchdate
                 tide.day = day
@@ -104,6 +103,33 @@ class Nmdis:
                     provinces.append(province)
                 return provinces
 
+    async def get_areas(self) -> Optional[List[Area]]:
+        """
+        Get all areas.
+
+        :return: Return None if failed.
+        """
+        url = f'{Nmdis.__BASE_URL}/area/list'
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url=url, headers=Headers.NMDIS) as response:
+                if response.status != 200:
+                    self.logger.error(self.__err_msg('get', url, response))
+                    return None
+                self.logger.info(self.__info_msg('get', url, response))
+                content = await response.json()
+                if not content.get('success') or not isinstance(content.get('data'), list):
+                    self.logger.error(f'{content}')
+                    return None
+                areas: List[Area] = []
+                data: List[Dict[str, Any]] = content.get('data')
+                for item in data:
+                    area = CArea()
+                    area.rid = item.get('id')
+                    area.raw = await response.text()
+                    area.name = item.get('areaname')
+                    areas.append(area)
+                return areas
+
     async def get_ports(self, province_code: str) -> Optional[List[Port]]:
         """
         Get all ports belongs to province.
@@ -132,7 +158,7 @@ class Nmdis:
                     port.province = CProvince()
                     port.province.rid = province_code
                     port.geopoint = (item.get('coordx'), item.get('coordy'))
-                    port.zone='' # TODO: get time zone from get_tide response.data.timearea
+                    port.zone = ''  # TODO: get time zone from get_tide response.data.timearea
                     ports.append(port)
                 return ports
 
