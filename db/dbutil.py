@@ -91,7 +91,7 @@ class DbUtil(BaseDbUtil):
         return self.db_util.get_tide(port_id, d)
 
     def get_areas(self) -> List[Area]:
-        return self.db_util.get_all_areas()
+        return self.db_util.get_areas()
 
     def get_provinces(self, area: Union[Area, str], col: IDT = None) -> List[Province]:
         return self.db_util.get_provinces(area, col)
