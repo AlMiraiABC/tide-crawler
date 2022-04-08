@@ -17,16 +17,19 @@ from leancloud.object_ import Object
 class DbUtil(BaseDbUtil):
     """Wrapper for all storage operations."""
 
-    def __init__(self) -> None:
+    def __init__(self, db_util: BaseDbUtil = None) -> None:
         """Create a new dbutil instance. Please use `dbutil.db_util` as usual."""
         # TODO return db_util if has been created
         self.db_util: BaseDbUtil = None
-        if STORAGE == Storages.LEAN_CLOUD:
-            self.db_util = LCUtil()
-        elif STORAGE == Storages.RDB:
-            self.db_util = RDBUtil()
+        if db_util:
+            self.db_util = db_util
         else:
-            raise ValueError(f"STORAGE {STORAGE} not support")
+            if STORAGE == Storages.LEAN_CLOUD:
+                self.db_util = LCUtil()
+            elif STORAGE == Storages.RDB:
+                self.db_util = RDBUtil()
+            else:
+                raise ValueError(f"STORAGE {STORAGE} not support")
 
     def open(self):
         return self.db_util.open()

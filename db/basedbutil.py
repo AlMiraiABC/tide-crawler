@@ -60,7 +60,7 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def add_tide(self, Tide, col: IDT) -> Tuple[ExecState, Optional[Tide]]:
+    def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Optional[Tide]]:
         """Add a tide record"""
         pass
 
