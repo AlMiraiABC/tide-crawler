@@ -1,9 +1,7 @@
-from datetime import date, datetime
-from unittest import TestCase, IsolatedAsyncioTestCase
+from datetime import datetime
+from unittest import IsolatedAsyncioTestCase, TestCase
 
 from crawler.nmdis import Nmdis
-from db.basedbutil import IDT
-from db.dbutil import DbUtil
 
 
 class TestNmdis(TestCase):
@@ -25,6 +23,7 @@ class TestNmdis(TestCase):
 
 
 class TestNmdisAsync(IsolatedAsyncioTestCase):
+    """Get infos from nmdis to verify the links, do not mock requests."""
     def __init__(self, methodName: str = ...) -> None:
         super().__init__(methodName)
         self.nmdis = Nmdis()
