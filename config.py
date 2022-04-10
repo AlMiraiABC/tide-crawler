@@ -12,8 +12,8 @@ class Storages(Enum):
 
 class Crawlers(Enum):
     """Data source, where data come from"""
-    CXB = auto()  # https://www.chaoxibiao.net/
-    CNSS = auto()  # https://www.cnss.com.cn/tide/
+    # CXB = auto()  # https://www.chaoxibiao.net/
+    # CNSS = auto()  # https://www.cnss.com.cn/tide/
     NMDIS = auto()  # http://mds.nmdis.org.cn/pages/tidalCurrent.html
 
 
