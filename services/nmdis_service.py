@@ -2,9 +2,8 @@ from datetime import datetime
 from typing import List, NoReturn, Optional
 
 from crawlers.nmdis import Nmdis
-from storages.model import Area, Port, Province, Tide
-
 from service.basecrawlerservice import BaseCrawlerService
+from storages.model import Area, Port, Province, Tide
 
 
 class NmdisService(BaseCrawlerService):

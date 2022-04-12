@@ -6,7 +6,8 @@
         "test",
         "doc",
         "crawler",
-        "service"
+        "service",
+        "web"
     ],
     "python.testing.unittestArgs": [
         "-v",
