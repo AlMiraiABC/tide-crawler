@@ -3,11 +3,11 @@ import os
 from json import JSONEncoder
 from typing import List, Optional
 
-from db.basedbutil import IDT, BaseDbUtil
-from db.dbutil import DbUtil
-from db.model import Area, BaseClazz, Port, Province, WithInfo
-
-from util.validate import Value
+from storages.basedbutil import IDT, BaseDbUtil, switch_idt
+from storages.dbutil import DbUtil
+from storages.model import Area, BaseClazz, Port, Province, WithInfo
+from utils.singleton import singleton
+from utils.validate import Value
 
 
 class BaseClazzEncoder(JSONEncoder):
@@ -57,6 +57,7 @@ _PRE_ID = 'ID'
 _PRE_RID = 'RID'
 
 
+@singleton
 class CacheDB:
     """Cache util for db module."""
 
@@ -64,6 +65,7 @@ class CacheDB:
     def __init__(self, dump: str = 'cache.json', db_util: BaseDbUtil = None, *args, **kwargs) -> None:
         """
         :param dump: Dump json file name to load and save data.
+        :param db_util: Inner db util for :class:`DbUtil`
         """
         self.cache_areas = {}  # cache, index areas
         self.cache_provinces = {}  # index provinces
@@ -71,12 +73,12 @@ class CacheDB:
         self.db_util = db_util
         self.dargs = args
         self.dkwargs = kwargs
+        self.dump_file_name = dump
         if os.path.exists(dump):
             if not os.path.isfile(dump):
                 raise ValueError(f'{dump} is not a file.')
         else:
             self.init_dump_file()
-        self.dump_file_name = dump
 
     def init_dump_file(self):
         """
@@ -86,7 +88,7 @@ class CacheDB:
         ------------
         This will clean all dump data.
         """
-        with open(self.dump_file_name, *self.dargs, **self.dkwargs) as f:
+        with open(self.dump_file_name, 'w', *self.dargs, **self.dkwargs) as f:
             f.write('{}')
 
     def save(self):
@@ -159,7 +161,48 @@ class CacheDB:
         ports.pop(pid, None)
         ports.pop(prid, None)
 
-    def refresh_areas(self):
+    def get_area(self, area: str, col: IDT) -> Optional[Area]:
+        """Get cached area."""
+        area_dic = self._get_area_dict(area, col)
+        return area_dic['origin'] if area_dic else None
+
+    def __get_keys(self, caches: dict, key: str) -> list:
+        return list({o[key] for o in caches.values()})
+
+    def get_areas(self) -> List[Area]:
+        return self.__get_keys(self.cache_areas, 'origin')
+
+    def _get_area_dict(self, area: str, col: IDT) -> Optional[Area]:
+        return switch_idt(col, lambda: self.cache_areas.get(_PRE_ID+area),
+                          lambda: self.cache_areas.get(_PRE_RID+area))
+
+    def get_province(self, province, col: IDT) -> Optional[Province]:
+        """Get cached province."""
+        province_dic = self._get_province_dict(province, col)
+        return province_dic['origin'] if province_dic else None
+
+    def _get_province_dict(self, province: str, col: IDT) -> Optional[Province]:
+        return switch_idt(col, lambda: self.cache_provinces.get(_PRE_ID+province),
+                          lambda: self.cache_provinces.get(_PRE_RID+province))
+
+    def get_provinces(self, area: str, col: IDT) -> Optional[List[Province]]:
+        area_dic = self._get_area_dict(area, col)
+        return None if not area_dic else self.__get_keys(self.cache_provinces, 'origin')
+
+    def get_port(self, port: str, col: IDT) -> Optional[Port]:
+        """Get cached port."""
+        port_dic = self._get_port_dict(port, col)
+        return port_dic['origin'] if port_dic else None
+
+    def get_ports(self, province: str, col: IDT) -> Optional[List[Port]]:
+        province_dic = self._get_province_dict(province, col)
+        return None if not province_dic else self.__get_keys(self.cache_provinces, 'origin')
+
+    def _get_port_dict(self, port: str, col: IDT) -> Optional[Port]:
+        return switch_idt(col, lambda: self.cache_ports.get(_PRE_ID+port),
+                          lambda: self.cache_ports.get(_PRE_RID+port))
+
+    async def refresh_areas(self):
         """
         Re-fetch all areas data to cache.
 
@@ -170,11 +213,11 @@ class CacheDB:
         self.cache_areas.clear()
         self.cache_provinces.clear()
         self.cache_ports.clear()
-        areas = DbUtil(self.db_util).get_areas()
+        areas = await DbUtil(self.db_util).get_areas()
         for area in areas:
             self._add_area(area)
 
-    def refresh_provinces(self, area_id: Optional[str]):
+    async def refresh_provinces(self, area_id: Optional[str]):
         """
         Re-fetch provinces which belongs to :param:`area_id`.
 
@@ -183,8 +226,8 @@ class CacheDB:
             Or Set to ``None`` to refresh all provinces. Will not refresh areas.
         :raise ValueError: Set :param:`area_id`, but not cache it and not find from db.
         """
-        def refresh(aid: str):
-            ps = DbUtil(self.db_util).get_provinces(aid, col=IDT.ID)
+        async def refresh(aid: str):
+            ps = await DbUtil(self.db_util).get_provinces(aid, col=IDT.ID)
             for p in ps:
                 self._add_province(p)
 
@@ -193,19 +236,19 @@ class CacheDB:
             self.cache_areas[_PRE_ID+aid]['provinces'].clear()
             # self.cache_areas[_PRE_RID+aid]['provinces'].clear()
             for aid in self.cache_areas.keys():
-                refresh(aid)
+                await refresh(aid)
         else:
-            if area_id not in self.cache_areas.keys():
-                area = DbUtil(self.db_util).get_area(area_id, IDT.ID)
+            if _PRE_ID+area_id not in self.cache_areas.keys():
+                area = await DbUtil(self.db_util).get_area(area_id, IDT.ID)
                 if area is None:
                     raise ValueError(f'area id {area_id} not found.')
                 self._add_area(area)
             rmkeys = [k for k, v in self.cache_provinces.items()
                       if v['area'] == area_id]
             [self.cache_provinces.pop(k, None) for k in rmkeys]
-            refresh(area_id)
+            await refresh(area_id)
 
-    def refresh_ports(self, province_id: Optional[str]):
+    async def refresh_ports(self, province_id: Optional[str]):
         """
         Re-fetch ports which belongs to :param:`province_id`.
 
@@ -214,8 +257,8 @@ class CacheDB:
             Or Set to ``None`` to refresh all ports. Will not refresh areas and provinces.
         :raise ValueError: Set :param:`province_id`, but not cache it and not find from db.
         """
-        def refresh(pid: str):
-            ps = DbUtil(self.db_util).get_ports(pid, col=IDT.ID)
+        async def refresh(pid: str):
+            ps = await DbUtil(self.db_util).get_ports(pid, col=IDT.ID)
             self.cache_provinces[pid]['ports'].clear()
             for p in ps:
                 enc = PortEncoder().default(p)
@@ -225,52 +268,12 @@ class CacheDB:
         if Value.is_any_none_or_whitespace(province_id):
             self.cache_ports.clear()
             for pid in self.cache_provinces.keys():
-                refresh(pid)
+                await refresh(pid)
         else:
-            if province_id not in self.cache_provinces.keys():
-                province = DbUtil(self.db_util).get_province(
+            if _PRE_ID + province_id not in self.cache_provinces.keys():
+                province = await DbUtil(self.db_util).get_province(
                     province_id, IDT.ID)
                 if province is None:
                     raise ValueError(f'province id {province_id} not found.')
                 self.cache_provinces[province_id] = province
-            refresh(province_id)
-
-    def cmp_area(self, a1: Area, a2: Area) -> List[str]:
-        """
-        Compare two area instance.
-
-        :return: Different attributes.
-        """
-        cmpn = self.__cmp_base(a1, a2)
-        if not cmpn is None:
-            return cmpn
-        ret: list = []
-        # optional objectId
-        if not Value.is_any_none_or_whitespace(a1.objectId, a2.objectId):
-            if a1.objectId != a2.objectId:
-                ret.append('objectId')
-        else:
-            if a1.rid != a2.rid:
-                ret.append('rid')
-            if a1.name != a2.name:
-                ret.append('name')
-        return ret
-
-    def __cmp_base(self, o1, o2) -> Optional[bool]:
-        """
-        Base comparison for None, type and id.
-
-        :return:
-            True if both are None or has equals id.
-            False if one of None or difference type.
-            None for other situations and continue to compare.
-        """
-        if o1 is None and o2 is None:
-            return True
-        if o1 is None or o2 is None:
-            return False
-        if type(o1) != type(o2):
-            return False
-        if id(o1) == id(o2):
-            return True
-        return None
+            await refresh(province_id)

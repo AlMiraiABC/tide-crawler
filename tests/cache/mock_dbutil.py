@@ -1,4 +1,5 @@
 
+import asyncio
 import json
 import random
 from datetime import datetime
@@ -37,11 +38,12 @@ def random_str(s='0123456789abcdef', l=24):
     """Generate a random string from :param:`s` with :param:`l` length."""
     return ''.join(random.choices(s, k=l))
 
-
+def read():
+    with open('tests/utils/mock.json') as f:
+        return json.load(f)
 class MockDbUtil(BaseDbUtil):
     def __init__(self) -> None:
-        self.data: List[dict] = []
-        self.open()
+        self.data: List[dict] = read()
 
     def __convert(self, a: MockWithInfo, o: dict):
         a.objectId = o['objectId']
@@ -51,39 +53,38 @@ class MockDbUtil(BaseDbUtil):
         a.updatedAt = datetime.fromisoformat(o['updatedAt'])
         return a
 
-    def add_area(self, area, col: IDT):
+    async def add_area(self, area, col: IDT):
         pass
 
-    def add_port(self, port, col: IDT):
+    async def add_port(self, port, col: IDT):
         pass
 
-    def add_province(self, province, col: IDT):
+    async def add_province(self, province, col: IDT):
         pass
 
-    def add_tide(self, tide, col: IDT):
+    async def add_tide(self, tide, col: IDT):
         pass
 
-    def get_tide(self, port_id: str, d: datetime.date):
+    async def get_tide(self, port_id: str, d: datetime.date):
         pass
 
-    def open(self):
-        with open('tests/util/mock.json') as f:
-            self.data = json.load(f)
-
-    def close(self):
+    async def open(self):
         pass
 
-    def get_area(self, area_id: str, col: IDT):
+    async def close(self):
+        pass
+
+    async def get_area(self, area_id: str, col: IDT):
         for area in self.data:
             if area['objectId' if col == IDT.ID else 'rid'] == area_id:
                 a = MockArea()
                 return self.__convert(a, area)
         return None
 
-    def get_areas(self):
+    async def get_areas(self):
         return [self.__convert(MockArea(), area) for area in self.data]
 
-    def get_province(self, province_id: str, col: IDT):
+    async def get_province(self, province_id: str, col: IDT):
         for area in self.data:
             for province in area.get('provinces', []):
                 if province['objectId' if col == IDT.ID else 'rid'] == province_id:
@@ -93,7 +94,7 @@ class MockDbUtil(BaseDbUtil):
                     return self.__convert(p, province)
         return None
 
-    def get_provinces(self, area, col: IDT = None):
+    async def get_provinces(self, area, col: IDT = None):
         if type(area) == str:
             area_id = area
         else:
@@ -108,7 +109,7 @@ class MockDbUtil(BaseDbUtil):
                     ret.append(self.__convert(p, province))
         return ret
 
-    def get_port(self, port_id: str, col: IDT):
+    async def get_port(self, port_id: str, col: IDT):
         for area in self.data:
             for province in area.get('provinces', []):
                 for port in province.get('ports', []):
@@ -119,7 +120,7 @@ class MockDbUtil(BaseDbUtil):
                         return self.__convert(p, port)
         return None
 
-    def get_ports(self, province, col: IDT = None):
+    async def get_ports(self, province, col: IDT = None):
         if type(province) == str:
             province_id = province
         else:

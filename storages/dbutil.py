@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from config import STORAGE, Storages
 from utils.singleton import singleton
@@ -10,7 +10,6 @@ from storages.common import ExecState
 from storages.leancloud.lc_util import LCUtil
 from storages.model import Area, Port, Province, Tide
 from storages.rdb.rdb_util import RDBUtil
-from leancloud.object_ import Object
 
 
 @singleton
@@ -37,7 +36,7 @@ class DbUtil(BaseDbUtil):
     async def close(self):
         return await self.db_util.close()
 
-    async def __valid_none(self, o: Object, name: str):
+    async def __valid_none(self, o: Any, name: str):
         if o is None:
             raise ValueError(f"{name} cannot be null")
 

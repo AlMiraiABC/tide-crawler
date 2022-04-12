@@ -25,37 +25,6 @@ class BaseCrawlerService(ABC):
         """Destory."""
         pass
 
-    # region get data from database.
-    async def get_areas(self) -> List[Area]:
-        """Gets all areas"""
-        return await DbUtil().get_areas()
-
-    async def get_area(self, area_id: str) -> Optional[Area]:
-        """Gets a area by area's id."""
-        return await DbUtil().get_area(area_id, IDT.ID)
-
-    async def get_provinces(self, area_id: str) -> Optional[Province]:
-        """Gets all provinces which belongs to specified area by area's id."""
-        return await DbUtil().get_provinces(area_id, IDT.ID)
-
-    async def get_province(self, province_id: str) -> List[Province]:
-        """Gets a province by province's id."""
-        return await DbUtil().get_province(province_id, IDT.ID)
-
-    async def get_ports(self, province_id: str) -> List[Port]:
-        """Gets all ports which belgongs to specified province by province's id."""
-        return await DbUtil().get_ports(province_id, IDT.ID)
-
-    async def get_port(self, port_id: str) -> Port:
-        """Gets a port by port's id."""
-        return await DbUtil().get_port(port_id, IDT.ID)
-
-    async def get_tide(self, port_id: str, d: datetime.date) -> Optional[Tide]:
-        """Gets the tide of the specified date():param:`d`) from :param:`port_id`"""
-        return await DbUtil().get_tide(port_id, d)
-    # endregion
-
-    # region crawl data from third-part.
     @abstractmethod
     async def crawl_areas(self) -> List[Area]:
         """Crawls all areas"""
@@ -88,4 +57,3 @@ class BaseCrawlerService(ABC):
     @abstractmethod
     async def crawl_tide(self, d: datetime.date, port_id: str) -> Optional[Tide]:
         """Crawls the tide of the specified date():param:`d`) from :param:`port_id`"""
-    # endregion
