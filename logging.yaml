@@ -9,13 +9,13 @@ formatters:
     format: "%(asctime)s[%(levelname)s]%(pathname)s:%(funcName)s:%(lineno)d:%(process)d-%(thread)d:%(message)s"
 filters:
   cinfo:
-    (): "util.filter.RangeLevelFilter"
+    (): "utils.filter.RangeLevelFilter"
     level: [10, 20]
   info:
-    (): "util.filter.RangeLevelFilter"
+    (): "utils.filter.RangeLevelFilter"
     level: [20]
   error:
-    (): "util.filter.RangeLevelFilter"
+    (): "utils.filter.RangeLevelFilter"
     level: [30, 40, 50]
 handlers:
   console-info:
