@@ -71,6 +71,53 @@ All configs set in [config.py](./config.py)
 You can change this file to get variables from environment or other places.
 Such as `LCSetting.APP_ID`
 
+## Install dependencies
+
+```sh
+pip install -r requirements.txt
+```
+
+Or set pip mirror to improve download speed with parameter `-i`.
+
+```sh
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+```
+
 ## Docker
 
+Commingle soon.
+
 ## Develop
+
+### Project structure
+
+```sh
+|- `.devcontainer`  # configurations to develop in docker container used for vscode.
+|- `crawler` # crawlers to get data from third-part
+|- `db` # databases management(DAO)
+|- `log` # default logs save directory.
+|- `service` # unified `crawler` and `db` to provide services for `app`.
+|- `utils`
+|- `app.py` # start up application
+|- `config.py` # configuration
+|- `logging.yaml` # logger configuration
+```
+
+### Terminology
+
+name|alias|description
+-|-|-
+id|objectId|Object's id for users stored in project database.
+rid||Origin id for crawlers stored in third-part.
+
+### Storage
+
+All storage management(util) should implements `BaseDbUtil`
+
+Using `DbUtil` to provide a unified operations.
+
+### Crawler
+
+### Service
+
+All services should implements `BaseCrawlerService`
