@@ -70,13 +70,13 @@ class RDBWithInfo(RDBBaseClazz, WithInfo):
 
 
 class RDBArea(RDBWithInfo, Area):
-    __tablename__ = 'area'
+    __tablename__ = 'Area'
     dprovinces = relationship('RDBProvince', back_populates='darea')
 
 
 class RDBProvince(RDBWithInfo, Province):
-    __tablename__ = 'province'
-    darea_id = Column(Integer, ForeignKey('area.id'))
+    __tablename__ = 'Province'
+    darea_id = Column('area', Integer, ForeignKey('area.id'))
     darea = relationship('RDBArea', back_populates='dprovinces')
     dports = relationship('RDBPort', back_populates='dprovince')
 
@@ -94,11 +94,11 @@ GeoPoint = NewType('GeoPoint', Tuple[float, float])
 
 
 class RDBPort(RDBWithInfo, Port[GeoPoint]):
-    __tablename__ = 'port'
+    __tablename__ = 'Port'
     dzone = Column('zone', String)
     dlat = Column('lat', Float)
     dlon = Column('lon', Float)
-    dprovince_id = Column('province_id'. Integer, ForeignKey('province.id'))
+    dprovince_id = Column('province'. Integer, ForeignKey('province.id'))
     dprovince = relationship('RDBProvince', back_populates='dports')
 
     @property
@@ -128,10 +128,10 @@ class RDBPort(RDBWithInfo, Port[GeoPoint]):
 
 
 class RDBTide(RDBBaseClazz, Tide):
-    __tablename__ = 'tide'
+    __tablename__ = 'Tide'
     dlimit = Column('limit', JSON)
     dday = Column('day', JSON)
-    dport_id = Column('port_id', Integer, ForeignKey('port.id'))
+    dport_id = Column('port', Integer, ForeignKey('port.id'))
     dport = relationship('Port')
     ddate = Column('date', Date)
     ddatum = Column('datum', Float)
