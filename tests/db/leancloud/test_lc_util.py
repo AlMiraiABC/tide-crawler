@@ -1,15 +1,22 @@
+import asyncio
 import datetime
 import random
 from typing import Iterable, Iterator
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase, TestCase
+from config import LCSetting
 
+from db.basedbutil import IDT
 from db.common import ExecState
-from db.leancloud.lc_model import LCArea, LCBaseClazz, LCPort, LCProvince, LCTide, LCWithInfo
+from db.leancloud.lc_model import (LCArea, LCBaseClazz, LCPort, LCProvince,
+                                   LCTide, LCWithInfo)
 from db.leancloud.lc_util import LCUtil
+from db.model import TideItem
 
 import leancloud
 
-from db.model import TideItem
+leancloud.init(LCSetting.APP_ID,
+               LCSetting.APP_KEY if LCSetting.APP_KEY else LCSetting.MASTER_KEY)
+leancloud.User().login(LCSetting.USERNAME, LCSetting.PASSWORD)
 
 
 def delete(*args):
@@ -72,20 +79,17 @@ def add_tide(port: LCPort, save: bool = True):
     return tide, day, limit
 
 
-class TestLCUtilInit(TestCase):
-    def test_init(self):
+class TestLCUtilInit(IsolatedAsyncioTestCase):
+    async def test_init(self):
         lc = LCUtil()
-        print(lc)
         self.assertIsNotNone(lc)
 
-    def test_logout(self):
+    async def test_logout(self):
         lc = LCUtil()
-        lc.logout()
-        cu = leancloud.User.get_current()
-        self.assertIsNone(cu)
+        await lc.logout()
 
 
-class TestLCUtilAdd(TestCase):
+class TestLCUtilAdd(IsolatedAsyncioTestCase):
     """LCUtil.add_*"""
     lc: LCUtil = None
 
@@ -96,14 +100,10 @@ class TestLCUtilAdd(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.lc.logout()
+        asyncio.ensure_future(cls.lc.logout())
         return super().tearDownClass()
 
-    def test_close_closed(self):
-        """logout when has been logged out."""
-        self.lc.logout()
-
-    def test_try_insert(self):
+    async def test_try_insert(self):
         # TODO Forbidden writing by object's ACL
         """insert objects successfully."""
         def save(o):
@@ -114,12 +114,12 @@ class TestLCUtilAdd(TestCase):
             return o
 
         area = add_area(False)
-        (ret, inserted) = self.lc.try_insert(area, 'rid', save, LCArea)
+        (ret, inserted) = await self.lc.try_insert(area, IDT.RID, save, LCArea)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertTrue(inserted.is_existed())
         delete(inserted)
 
-    def test_try_insert_update(self):
+    async def test_try_insert_update(self):
         # TODO Forbidden writing by object's ACL
         """insert objects but exists, update it."""
         def save(o):
@@ -133,20 +133,20 @@ class TestLCUtilAdd(TestCase):
         arean.rid = area.rid
         arean.name = random_str()
         arean.raw = random_str()
-        (ret, updated) = self.lc.try_insert(arean, 'rid', save, LCArea)
+        (ret, updated) = await self.lc.try_insert(arean, IDT.RID, save, LCArea)
         self.assertEquals(ret, ExecState.UPDATE)
         self.assertEquals(updated.objectId, area.objectId)
         self.assertEquals(updated.name, arean.name)
         delete(updated)
 
-    def test_add_area_id_unexist(self):
+    async def test_add_area_id_unexist(self):
         """add_area compared by id and unexist so create it."""
         area = add_area(False)
-        (ret, _) = self.lc.add_area(area, 'id')
+        (ret, _) = await self.lc.add_area(area, IDT.ID)
         self.assertEquals(ret, ExecState.CREATE)
         delete(area)
 
-    def test_add_area_id_exist(self):
+    async def test_add_area_id_exist(self):
         """add_area compared by id and exist so update it."""
         area = add_area()
         id = area.objectId  # get new id
@@ -154,49 +154,49 @@ class TestLCUtilAdd(TestCase):
         area.raw = random_str()
         area.name = random_str()
         area.rid = random_str()
-        (ret, updated) = self.lc.add_area(area, 'id')
+        (ret, updated) = await self.lc.add_area(area, IDT.ID)
         self.assertEquals(ret, ExecState.UPDATE)
         self.assertEquals(updated.name, area.name)
         delete(updated)
 
-    def test_add_area_rid_unexist(self):
+    async def test_add_area_rid_unexist(self):
         """add_area compared by rid and unexist so create it."""
         area = add_area(False)
-        (ret, inserted) = self.lc.add_area(area, 'rid')
+        (ret, inserted) = await self.lc.add_area(area, IDT.RID)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.rid, area.rid)
         delete(inserted)
 
-    def test_add_area_rid_exist(self):
+    async def test_add_area_rid_exist(self):
         """add_area compared by rid but unexist so update it."""
         area = add_area()
         arean = LCArea()
         arean.raw = random_str()
         arean.name = random_str()
         arean.rid = area.rid
-        (ret, updated) = self.lc.add_area(arean, 'rid')
+        (ret, updated) = await self.lc.add_area(arean, IDT.RID)
         self.assertEquals(ret, ExecState.UPDATE)
         self.assertEquals(updated.name, arean.name)
         delete(updated)
 
-    def test_add_province_area_exist(self):
+    async def test_add_province_area_exist(self):
         """add_province by id """
         area = add_area()
         a = LCArea.create_without_data(area.objectId)
         province = add_province(a, False)
-        (ret, inserted) = self.lc.add_province(province, 'id')
+        (ret, inserted) = await self.lc.add_province(province, IDT.ID)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.objectId, area.objectId)
         delete(inserted, area)
 
-    def test_add_province_area_unexist(self):
+    async def test_add_province_area_unexist(self):
         """add_province failed and raise exception becase area doesn't exist."""
         area = add_area(False)
         province = add_province(area, False)
         with self.assertRaises(ValueError):
-            self.lc.add_province(province, 'id')
+            await self.lc.add_province(province, IDT.ID)
 
-    def test_add_province_area_rid_exist(self):
+    async def test_add_province_area_rid_exist(self):
         """
         add_province
         province.rid doesn't exist
@@ -207,12 +207,12 @@ class TestLCUtilAdd(TestCase):
         a = LCArea()
         a.rid = area.rid
         province = add_province(a, False)
-        (ret, inserted) = self.lc.add_province(province, 'rid')
+        (ret, inserted) = await self.lc.add_province(province, IDT.RID)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.objectId, area.objectId)
         delete(inserted, area)
 
-    def test_add_tide_get_set_tideitem(self):
+    async def test_add_tide_get_set_tideitem(self):
         """add_tide and verify __to_dicts when set"""
         def convert(tideitems):
             return [tideitem.__dict__ for tideitem in tideitems]
@@ -220,7 +220,7 @@ class TestLCUtilAdd(TestCase):
         province = add_province(area)
         port = add_port(province)
         (tide, day, limit) = add_tide(port, save=False)
-        (ret, inserted) = self.lc.add_tide(tide, 'id')
+        (ret, inserted) = await self.lc.add_tide(tide, IDT.ID)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertListEqual(convert(day), convert(inserted.day))
         self.assertListEqual(convert(limit), convert(inserted.limit))
@@ -267,7 +267,7 @@ class TestLCUtilGet(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.lc.logout()
+        asyncio.ensure_future(cls.lc.logout())
         return super().tearDownClass()
 
     def _assert_base(self, a: LCBaseClazz, b: LCBaseClazz):
@@ -279,58 +279,58 @@ class TestLCUtilGet(TestCase):
         self.assertEquals(a.rid, b.rid)
         self.assertEquals(a.name, b.name)
 
-    def test_get_area_id(self):
+    async def test_get_area_id(self):
         area = add_area()
-        a = self.lc.get_area(area.objectId, 'id')
+        a = await self.lc.get_area(area.objectId, IDT.ID)
         self._assert_with_info(area, a)
         delete(area)
 
-    def test_get_area_rid(self):
+    async def test_get_area_rid(self):
         area = add_area()
-        a = self.lc.get_area(area.rid, 'rid')
+        a = await self.lc.get_area(area.rid, IDT.RID)
         self._assert_with_info(area, a)
         delete(area)
 
-    def test_get_province_id(self):
+    async def test_get_province_id(self):
         area = add_area()
         province = add_province(area)
-        p = self.lc.get_province(province.objectId, 'id')
+        p = await self.lc.get_province(province.objectId, IDT.ID)
         self._assert_with_info(province, p)
         self._assert_with_info(area, p.area)
         delete(province, area)
 
-    def test_get_province_rid(self):
+    async def test_get_province_rid(self):
         area = add_area()
         province = add_province(area)
-        p = self.lc.get_province(province.rid, 'rid')
+        p = await self.lc.get_province(province.rid, IDT.RID)
         self._assert_with_info(province, p)
         self._assert_with_info(area, p.area)
         delete(province, area)
 
-    def test_get_port_id(self):
+    async def test_get_port_id(self):
         area = add_area()
         province = add_province(area)
         port = add_port(province)
-        p = self.lc.get_port(port.objectId, 'id')
+        p = await self.lc.get_port(port.objectId, IDT.ID)
         self._assert_with_info(port, p)
         self._assert_with_info(province, p.province)
         delete(port, province, area)
 
-    def test_get_port_rid(self):
+    async def test_get_port_rid(self):
         area = add_area()
         province = add_province(area)
         port = add_port(province)
-        p = self.lc.get_port(port.objectId, 'id')
+        p = await self.lc.get_port(port.objectId, IDT.ID)
         self._assert_with_info(port, p)
         self._assert_with_info(province, p.province)
         delete(port, province, area)
 
-    def test_get_tide(self):
+    async def test_get_tide(self):
         area = add_area()
         province = add_province(area)
         port = add_port(province)
         (tide, _, _) = add_tide(port)
-        t = self.lc.get_tide(port.objectId, tide.date.date())
+        t = await self.lc.get_tide(port.objectId, tide.date.date())
         self.assertIsNotNone(t)  # may return earlier or later row
         self.assertEquals(t.port.objectId, port.objectId)
         delete(tide, port, province, area)
@@ -358,58 +358,58 @@ class TestLCUtilGetList(TestCase):
     def _id_sets(self, objects: Iterator[LCBaseClazz]) -> set:
         return {i.objectId for i in objects}
 
-    def test_get_areas(self):
+    async def test_get_areas(self):
         areas1 = [add_area() for _ in range(2)]
-        areas2 = self.lc.get_areas()
+        areas2 = await self.lc.get_areas()
         self.assertSubset(self._id_sets(areas1), self._id_sets(areas2))
         delete(*areas1)
 
-    def test_get_provinces_area(self):
+    async def test_get_provinces_area(self):
         """get provinces by Area instance."""
         area = add_area()
         provinces1 = [add_province(area) for _ in range(2)]
-        provinces2 = self.lc.get_provinces(area)
+        provinces2 = await self.lc.get_provinces(area)
         self.assertSetEqual(self._id_sets(provinces1),
                             self._id_sets(provinces2))
         delete(*provinces1, area)
 
-    def test_get_provinces_str_id(self):
+    async def test_get_provinces_str_id(self):
         area = add_area()
         provinces1 = [add_province(area) for _ in range(2)]
-        provinces2 = self.lc.get_provinces(area.objectId, 'id')
+        provinces2 = await self.lc.get_provinces(area.objectId, IDT.ID)
         self.assertSetEqual(self._id_sets(provinces1),
                             self._id_sets(provinces2))
         delete(*provinces1, area)
 
-    def test_get_provinces_str_rid(self):
+    async def test_get_provinces_str_rid(self):
         area = add_area()
         provinces1 = [add_province(area) for _ in range(2)]
-        provinces2 = self.lc.get_provinces(area.rid, 'rid')
+        provinces2 = await self.lc.get_provinces(area.rid, IDT.RID)
         self.assertSetEqual(self._id_sets(provinces1),
                             self._id_sets(provinces2))
         delete(*provinces1, area)
 
-    def test_get_ports_province(self):
+    async def test_get_ports_province(self):
         """get ports by Province instance"""
         area = add_area()
         province = add_province(area)
         ports1 = [add_port(province) for _ in range(2)]
-        ports2 = self.lc.get_ports(province)
+        ports2 = await self.lc.get_ports(province)
         self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
         delete(*ports1, province, area)
 
-    def test_get_ports_str_id(self):
+    async def test_get_ports_str_id(self):
         area = add_area()
         province = add_province(area)
         ports1 = [add_port(province) for _ in range(2)]
-        ports2 = self.lc.get_ports(province.objectId, 'id')
+        ports2 = await self.lc.get_ports(province.objectId, IDT.ID)
         self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
         delete(*ports1, province, area)
 
-    def test_get_ports_str_rid(self):
+    async def test_get_ports_str_rid(self):
         area = add_area()
         province = add_province(area)
         ports1 = [add_port(province) for _ in range(2)]
-        ports2 = self.lc.get_ports(province.rid, 'rid')
+        ports2 = await self.lc.get_ports(province.rid, IDT.RID)
         self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
         delete(*ports1, province, area)

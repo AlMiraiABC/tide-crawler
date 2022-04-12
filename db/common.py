@@ -5,14 +5,17 @@ from enum import Enum, auto
 
 class ExecState(Enum):
     """Execute result"""
-    # execute successfully, used for CRD
+    # execute successfully
     SUCCESS = auto()
-    # record already exists, used for C
+    # record already exists
     EXIST = auto()
-    # record does not exist, used for D
+    # record does not exist
     UN_EXIST = auto()
-    # execute failed, used for CRD
+    # execute failed
     FAIL = auto()
+    # create record successfully
     CREATE = auto()
+    # update record successfully
     UPDATE = auto()
+    # delete record successfully
     DELETE = auto()

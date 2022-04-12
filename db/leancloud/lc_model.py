@@ -85,8 +85,7 @@ class LCProvince(LCWithInfo, Province):
 
     @property
     def area(self) -> LCArea:
-        a = self.get(LCProvince.AREA)
-        return LCArea.query.get(a.id)
+        return self.get(LCProvince.AREA)
 
     @area.setter
     def area(self, area: LCArea):
@@ -104,8 +103,7 @@ class LCPort(LCWithInfo, Port):
 
     @property
     def province(self) -> LCProvince:
-        p = self.get(LCPort.PROVINCE)
-        return LCProvince.query.get(p.id)
+        return self.get(LCPort.PROVINCE)
 
     @province.setter
     def province(self, province: LCProvince):
@@ -165,8 +163,7 @@ class LCTide(LCBaseClazz, Tide):
 
     @property
     def port(self) -> LCPort:
-        p = self.get(LCTide.PORT)
-        return LCPort.query.get(p.id)
+        return self.get(LCTide.PORT)
 
     @port.setter
     def port(self, value: LCPort):

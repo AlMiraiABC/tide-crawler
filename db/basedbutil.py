@@ -35,37 +35,37 @@ class BaseDbUtil(ABC):
     """DAO base class"""
 
     @abstractmethod
-    def open(self):
+    async def open(self):
         """Open a connection or reopen a new connection if it closed."""
         pass
 
     @abstractmethod
-    def close(self):
+    async def close(self):
         """Close current connection"""
         pass
 
     @abstractmethod
-    def add_area(self, area: Area, col: IDT) -> Tuple[ExecState, Optional[Area]]:
+    async def add_area(self, area: Area, col: IDT) -> Tuple[ExecState, Union[Area, Exception]]:
         """Add an area or update it if exists"""
         pass
 
     @abstractmethod
-    def add_province(self, province: Province, col: IDT) -> Tuple[ExecState, Optional[Province]]:
+    async def add_province(self, province: Province, col: IDT) -> Tuple[ExecState, Optional[Province]]:
         """Add an province or update it if exists."""
         pass
 
     @abstractmethod
-    def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, Optional[Port]]:
+    async def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, Optional[Port]]:
         """Add a port or update it if exists"""
         pass
 
     @abstractmethod
-    def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Optional[Tide]]:
+    async def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Optional[Tide]]:
         """Add a tide record"""
         pass
 
     @abstractmethod
-    def get_area(self, area_id: str, col: IDT) -> Optional[Area]:
+    async def get_area(self, area_id: str, col: IDT) -> Optional[Area]:
         """
         Get :class:`Area` by :param:`area_id`
 
@@ -76,7 +76,7 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def get_province(self, province_id: str, col: IDT) -> Optional[Province]:
+    async def get_province(self, province_id: str, col: IDT) -> Optional[Province]:
         """
         Get :class:`Province` by :param:`province_id`
 
@@ -87,7 +87,7 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def get_port(self, port_id: str, col: IDT) -> Optional[Port]:
+    async def get_port(self, port_id: str, col: IDT) -> Optional[Port]:
         """
         Get :class:`Port` by :param:`port_id`
 
@@ -98,7 +98,7 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
+    async def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
         """
         Get :class:`Tide` of specified date and port
 
@@ -110,12 +110,12 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def get_areas(self) -> List[Area]:
+    async def get_areas(self) -> List[Area]:
         """Get all :class:`Area`s"""
         pass
 
     @abstractmethod
-    def get_provinces(self, area: Union[Area, str], col: IDT = None) -> List[Province]:
+    async def get_provinces(self, area: Union[Area, str], col: IDT = None) -> List[Province]:
         """
         Get all :class:`Province`s belongs to :param:`area`.
 
@@ -125,7 +125,7 @@ class BaseDbUtil(ABC):
         pass
 
     @abstractmethod
-    def get_ports(self, province: Union[Province, str], col: IDT = None) -> List[Port]:
+    async def get_ports(self, province: Union[Province, str], col: IDT = None) -> List[Port]:
         """
         Get all :class:`Port`s  belongs to:param:`province`.
 
