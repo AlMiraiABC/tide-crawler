@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from util.logger import Logger, _package_name
+from utils.logger import Logger, _package_name
 
 
 class TestLogger(TestCase):

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from util.singleton import singleton
+from utils.singleton import singleton
 
 
 @singleton

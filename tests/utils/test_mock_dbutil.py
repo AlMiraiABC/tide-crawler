@@ -3,10 +3,10 @@ import json
 import random
 from typing import List
 from unittest import TestCase
-from db.basedbutil import IDT
-from tests.db.leancloud.test_lc_util import random_str
+from storages.basedbutil import IDT
+from tests.storages.leancloud.test_lc_util import random_str
 
-from tests.util.mock_dbutil import MockDbUtil, MockWithInfo
+from tests.utils.mock_dbutil import MockDbUtil, MockWithInfo
 
 
 class TestMockDbUtil(TestCase):

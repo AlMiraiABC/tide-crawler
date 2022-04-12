@@ -5,12 +5,12 @@ from typing import Iterable, Iterator
 from unittest import IsolatedAsyncioTestCase, TestCase
 from config import LCSetting
 
-from db.basedbutil import IDT
-from db.common import ExecState
-from db.leancloud.lc_model import (LCArea, LCBaseClazz, LCPort, LCProvince,
+from storages.basedbutil import IDT
+from storages.common import ExecState
+from storages.leancloud.lc_model import (LCArea, LCBaseClazz, LCPort, LCProvince,
                                    LCTide, LCWithInfo)
-from db.leancloud.lc_util import LCUtil
-from db.model import TideItem
+from storages.leancloud.lc_util import LCUtil
+from storages.model import TideItem
 
 import leancloud
 

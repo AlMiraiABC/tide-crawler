@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from util.validate import Value
+from utils.validate import Value
 
 
 class TestValue(TestCase):

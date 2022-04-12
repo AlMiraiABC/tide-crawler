@@ -34,7 +34,7 @@ handlers:
     class: logging.handlers.TimedRotatingFileHandler
     level: INFO
     formatter: info
-    filename: ./log/info/info.log # create log folder `log/info` manually
+    filename: ./logs/info/info.log # create log folder `log/info` manually
     when: W0
     backupCount: 14
     encoding: utf8
@@ -43,7 +43,7 @@ handlers:
     class: logging.handlers.TimedRotatingFileHandler
     level: WARNING
     formatter: error
-    filename: ./log/error/error.log # create log folder `log/error` manually
+    filename: ./logs/error/error.log # create log folder `log/error` manually
     when: W0
     backupCount: 14
     encoding: utf8

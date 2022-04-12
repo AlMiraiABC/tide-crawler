@@ -1,5 +1,5 @@
 from config import RDBSetting
-from db.common import ExecState
+from storages.common import ExecState
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 

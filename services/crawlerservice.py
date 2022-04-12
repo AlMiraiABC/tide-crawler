@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from config import CRAWLER, Crawlers
-from db.model import Area, Port, Province
+from storages.model import Area, Port, Province
 from service.basecrawlerservice import BaseCrawlerService
 from service.nmdis_service import NmdisService
 

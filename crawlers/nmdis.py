@@ -6,11 +6,11 @@ import aiohttp
 from config import Headers
 # from db.basedbutil import IDT
 # from db.dbutil import DbUtil
-from db.model import Area, Port, Province, Tide, TideItem
-from util.logger import Logger
+from storages.model import Area, Port, Province, Tide, TideItem
+from utils.logger import Logger
 
-from crawler.c_model import CArea, CPort, CProvince, CTide
-from util.validate import Value
+from crawlers.c_model import CArea, CPort, CProvince, CTide
+from utils.validate import Value
 
 
 class Nmdis:

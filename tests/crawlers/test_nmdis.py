@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest import IsolatedAsyncioTestCase, TestCase
 
-from crawler.nmdis import Nmdis
+from crawlers.nmdis import Nmdis
 
 
 class TestNmdis(TestCase):

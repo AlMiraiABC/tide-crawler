@@ -1,10 +1,10 @@
 import datetime
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from db.basedbutil import IDT
+from storages.basedbutil import IDT
 
-from db.dbutil import DbUtil
-from db.model import Area, Port, Province, Tide
+from storages.dbutil import DbUtil
+from storages.model import Area, Port, Province, Tide
 
 
 class BaseCrawlerService(ABC):

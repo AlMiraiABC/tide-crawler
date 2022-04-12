@@ -4,7 +4,7 @@ import random
 from datetime import datetime
 from typing import List, Tuple
 
-from db.basedbutil import IDT, BaseDbUtil
+from storages.basedbutil import IDT, BaseDbUtil
 
 
 class MockBaseClazz:

@@ -3,8 +3,8 @@ from datetime import date
 from enum import Enum, auto
 from typing import Any, Callable, List, Optional, Tuple, Union
 
-from db.common import ExecState
-from db.model import Area, Port, Province, Tide
+from storages.common import ExecState
+from storages.model import Area, Port, Province, Tide
 
 
 class IDT(Enum):

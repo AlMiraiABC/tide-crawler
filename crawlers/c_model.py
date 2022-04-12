@@ -2,7 +2,7 @@
 import datetime
 from typing import Any, List, Optional, Tuple
 
-from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
+from storages.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
 
 
 class CBase(BaseClazz):

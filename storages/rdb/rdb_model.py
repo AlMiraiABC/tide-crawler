@@ -6,8 +6,8 @@ import datetime
 from typing import Any, List, NewType, Optional, Tuple, Union
 from unicodedata import name
 
-from db import dbutil
-from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
+from storages import dbutil
+from storages.model import Area, BaseClazz, Port, Province, Tide, TideItem, WithInfo
 from sqlalchemy import (JSON, Column, Date, DateTime, Float, ForeignKey,
                         Integer, String)
 from sqlalchemy.ext.declarative import declarative_base

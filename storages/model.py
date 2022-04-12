@@ -6,7 +6,7 @@ import datetime
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Tuple, TypedDict
 
-from util.validate import Value
+from utils.validate import Value
 
 
 class BaseClazz(ABC):

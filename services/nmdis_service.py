@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List, NoReturn, Optional
 
-from crawler.nmdis import Nmdis
-from db.model import Area, Port, Province, Tide
+from crawlers.nmdis import Nmdis
+from storages.model import Area, Port, Province, Tide
 
 from service.basecrawlerservice import BaseCrawlerService
 

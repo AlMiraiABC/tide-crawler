@@ -9,7 +9,7 @@ https://leancloud.cn/docs/leanstorage_guide-python.html#hash23473483
 import datetime
 from typing import Any, List, Optional, Tuple, Union
 
-from db.model import Area, BaseClazz, Port, Province, Tide, TideItem, TideItemDict, WithInfo
+from storages.model import Area, BaseClazz, Port, Province, Tide, TideItem, TideItemDict, WithInfo
 
 from leancloud import GeoPoint, Object
 
