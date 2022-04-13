@@ -18,3 +18,4 @@ class TestValue(TestCase):
         self.assertTrue(Value.is_any_none_or_whitespace(*vs, '  '))
         self.assertTrue(Value.is_any_none_or_whitespace(*vs, None))
         self.assertFalse(Value.is_any_none_or_whitespace(*vs, 'abc'))
+        self.assertFalse(Value.is_any_none_or_whitespace(*vs, vs))

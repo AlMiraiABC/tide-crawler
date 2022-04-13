@@ -29,5 +29,9 @@ class Value:
         >>> Value.is_any_none_or_whitespace('abc','def') # False
         """
         for v in args:
-            if not v or not v.strip():
+            if isinstance(v, str):
+                if not v or not v.strip():
+                    return True
+            if not v:
                 return True
+        return False
