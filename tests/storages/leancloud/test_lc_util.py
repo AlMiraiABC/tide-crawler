@@ -104,7 +104,7 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         return super().tearDownClass()
 
     async def test_try_insert(self):
-        # TODO Forbidden writing by object's ACL
+        # FIXME Forbidden writing by object's ACL
         """insert objects successfully."""
         def save(o):
             o = LCArea()
@@ -120,7 +120,7 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         delete(inserted)
 
     async def test_try_insert_update(self):
-        # TODO Forbidden writing by object's ACL
+        # FIXME Forbidden writing by object's ACL
         """insert objects but exists, update it."""
         def save(o):
             o.raw = arean.raw

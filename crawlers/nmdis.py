@@ -46,7 +46,7 @@ class Nmdis:
                 'port_code and query_date cannot be none or empty.')
         url = f'{Nmdis.__BASE_URL}/chaoxidata/list'
         reqbody = {
-            'serchdate': query_date.strftime('%Y-%m-%d'),  # yyyy-MM-dd
+            'serchdate': query_date.isoformat(),  # yyyy-MM-dd
             'sitecode': port_code
         }
         async with aiohttp.ClientSession() as session:
@@ -54,7 +54,7 @@ class Nmdis:
                 if response.status != 200:
                     self.logger.error(await self.__err_msg('post', url, response))
                     return None
-                self.logger.info(self.__info_msg('post', url, response))
+                self.logger.info(await self.__info_msg('post', url, response))
                 content: Dict[str, Any] = await response.json()
                 datas = content.get('data')
                 if not content.get('success') or not isinstance(datas, list) or len(datas) == 0:
@@ -62,10 +62,12 @@ class Nmdis:
                     return None
                 data: Dict[str, Any] = datas[0]
                 filedata: Dict[str, Union[int, str]] = data.get('filedata')
-                day, limit = self.__get_tide_data(filedata)
-                datum = self.__get_datum(data.get('benchmark'))
+                day, limit = self._get_tide_data(filedata)
+                datum = self._get_datum(data.get('benchmark'))
                 # zone: str = data.get('timearea')
                 tide = CTide()
+                # if date out of range, will get other date.
+                # get tide date from response instead of :param:`query_date`.
                 tide.date = datetime.fromisoformat(
                     data.get('serchdate'))  # YES, It's serchdate
                 tide.day = day
@@ -90,9 +92,9 @@ class Nmdis:
         async with aiohttp.ClientSession() as session:
             async with session.get(url=url, headers=Headers.NMDIS) as response:
                 if response.status != 200:
-                    self.logger.error(self.__err_msg('get', url, response))
+                    self.logger.error(await self.__err_msg('get', url, response))
                     return None
-                self.logger.info(self.__info_msg('get', url, response))
+                self.logger.info(await self.__info_msg('get', url, response))
                 content = await response.json()
                 if not content.get('success') or not isinstance(content.get('data'), list):
                     self.logger.error(f'{content}')
@@ -120,9 +122,9 @@ class Nmdis:
         async with aiohttp.ClientSession() as session:
             async with session.get(url=url, headers=Headers.NMDIS) as response:
                 if response.status != 200:
-                    self.logger.error(self.__err_msg('get', url, response))
+                    self.logger.error(await self.__err_msg('get', url, response))
                     return None
-                self.logger.info(self.__info_msg('get', url, response))
+                self.logger.info(await self.__info_msg('get', url, response))
                 content = await response.json()
                 if not content.get('success') or not isinstance(content.get('data'), list):
                     self.logger.error(f'{content}')
@@ -152,7 +154,7 @@ class Nmdis:
                 if response.status != 200:
                     self.logger.error(self.__err_msg('get', url, response))
                     return None
-                self.logger.info(self.__info_msg('get', url, response))
+                self.logger.info(await self.__info_msg('get', url, response))
                 content: dict = await response.json()
                 if not content.get('success') or not isinstance(content.get('data'), list):
                     self.logger.error(f'{content}')
@@ -167,11 +169,11 @@ class Nmdis:
                     port.province = CProvince()
                     port.province.rid = province_code
                     port.geopoint = (item.get('coordy'), item.get('coordx'))
-                    port.zone = ''  # UNDO: get time zone from get_tide response.data.timearea
+                    port.zone = ''  # TODO: get time zone from get_tide response.data.timearea
                     ports.append(port)
                 return ports
 
-    def __get_datum(self, text: str) -> float:
+    def _get_datum(self, text: str) -> float:
         """
         Get datum from string benchmark
 
@@ -185,7 +187,7 @@ class Nmdis:
         h = float(regex.group(2))
         return h if regex.group(1) == '上' else -h
 
-    def __get_tide_data(self, data: Dict[str, Union[int, str]]) -> Tuple[List[TideItem], List[TideItem]]:
+    def _get_tide_data(self, data: Dict[str, Union[int, str]]) -> Tuple[List[TideItem], List[TideItem]]:
         day = [TideItem(time(int(re.search('\d+', k).group())), v)
                for k, v in data.items() if re.match('a\d+', k)]
         limit = [TideItem(time.fromisoformat(data.get('cs'+re.search("\\d+", k).group())), v)
