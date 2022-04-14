@@ -4,7 +4,7 @@ from unittest import IsolatedAsyncioTestCase, TestCase
 from storages.basedbutil import IDT
 from tests.cache.mock_dbutil import MockBaseClazz, MockDbUtil
 
-from cache.cache import _PRE_ID, BaseClazzEncoder, CacheDB
+from cache.cache_db import _PRE_ID, BaseClazzEncoder, CacheDB
 
 
 class TestBaseClazzEncoder(TestCase):
