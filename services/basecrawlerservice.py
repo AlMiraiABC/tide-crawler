@@ -2,8 +2,6 @@ import datetime
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from storages.basedbutil import IDT
-from storages.dbutil import DbUtil
 from storages.model import Area, Port, Province, Tide
 
 
@@ -12,7 +10,6 @@ class BaseCrawlerService(ABC):
 
     def __init__(self) -> None:
         super().__init__()
-        self.set_up()
 
     def __del__(self):
         self.tear_down()
