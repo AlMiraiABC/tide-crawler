@@ -1,12 +1,13 @@
 FROM almirai/python:3.8.12-alpine
 LABEL author="almirai"
 LABEL email="live.almirai@outlook.com"
-LABEL version="0.1"
+LABEL version="0.2"
 LABEL description="Crawler to get tide data."
 LABEL name="tide-crawler"
 COPY . .
 USER root
-RUN python -m pip install --no-cache-dir -U -i https://pypi.tuna.tsinghua.edu.cn/simple pip && \
+RUN apk add --no-cache --update musl-dev gcc libffi-dev && \
+    python -m pip install --no-cache-dir -U -i https://pypi.tuna.tsinghua.edu.cn/simple pip && \
     pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 USER appuser
 EXPOSE 8000
