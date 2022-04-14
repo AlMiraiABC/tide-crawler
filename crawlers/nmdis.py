@@ -166,8 +166,8 @@ class Nmdis:
                     port.raw = await response.text()
                     port.province = CProvince()
                     port.province.rid = province_code
-                    port.geopoint = (item.get('coordx'), item.get('coordy'))
-                    port.zone = ''  # TODO: get time zone from get_tide response.data.timearea
+                    port.geopoint = (item.get('coordy'), item.get('coordx'))
+                    port.zone = ''  # UNDO: get time zone from get_tide response.data.timearea
                     ports.append(port)
                 return ports
 
