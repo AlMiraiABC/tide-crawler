@@ -18,7 +18,6 @@ class DbUtil(BaseDbUtil):
 
     def __init__(self, db_util: BaseDbUtil = None) -> None:
         """Create a new dbutil instance. Please use `dbutil.db_util` as usual."""
-        # TODO return db_util if has been created
         self.db_util: BaseDbUtil = None
         if db_util:
             self.db_util = db_util
@@ -55,9 +54,9 @@ class DbUtil(BaseDbUtil):
 
     async def add_port(self, port: Port, col: IDT) -> Tuple[ExecState, Union[Optional[Port], Exception]]:
         self.__valid_none(port, 'port')
-        if Value.is_any_none_or_whitespace(port.rid, port.name, port.area, port.area.rid):
+        if Value.is_any_none_or_whitespace(port.rid, port.name, port.province, port.province.rid):
             raise ValueError(
-                "port rid, name, area and area.rid cannot be null or empty")
+                "port rid, name, province and province.rid cannot be null or empty")
         return await self.db_util.add_port(port, col)
 
     async def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Union[Optional[Tide], Exception]]:
