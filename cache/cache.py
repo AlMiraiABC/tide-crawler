@@ -1,279 +1,203 @@
-import json
-import os
-from json import JSONEncoder
-from typing import List, Optional
+"""
+reference: https://github.com/aio-libs/async-lru/blob/master/async_lru.py
+author: aio-libs
+date: 2020-10-25(last update)
+docs: https://pypi.org/project/async_lru/
+required: python 3.6+
+"""
+import asyncio
+from collections import OrderedDict
+from functools import _CacheInfo, _make_key, partial, wraps
 
-from storages.basedbutil import IDT, BaseDbUtil, switch_idt
-from storages.dbutil import DbUtil
-from storages.model import Area, BaseClazz, Port, Province, WithInfo
-from utils.singleton import singleton
-from utils.validate import Value
+__version__ = "1.0.2"
 
-
-class BaseClazzEncoder(JSONEncoder):
-    def default(self, o: BaseClazz) -> dict:
-        d = {}
-        d['objectId'] = o.objectId
-        # datetime's type should be int, float or str
-        d['createdAt'] = o.createdAt.isoformat() if o.createdAt else None
-        d['updatedAt'] = o.updatedAt.isoformat() if o.updatedAt else None
-        d['origin'] = o
-        return d
+__all__ = ("alru_cache",)
 
 
-class WithInfoEncoder(BaseClazzEncoder):
-    def default(self, o: WithInfo) -> dict:
-        d = super().default(o)
-        d['rid'] = o.rid
-        d['name'] = o.name
-        return d
+def unpartial(fn):
+    while hasattr(fn, "func"):
+        fn = fn.func
+
+    return fn
 
 
-class AreaEncoder(WithInfoEncoder):
-    def default(self, o: Area) -> dict:
-        d = super().default(o)
-        d['provinces'] = {}
-        return d
+def _done_callback(fut, task):
+    if task.cancelled():
+        fut.cancel()
+        return
+
+    exc = task.exception()
+    if exc is not None:
+        fut.set_exception(exc)
+        return
+
+    fut.set_result(task.result())
 
 
-class ProvinceEncoder(WithInfoEncoder):
-    def default(self, o: Province) -> dict:
-        d = super().default(o)
-        d['ports'] = {}
-        d['area'] = o.area.objectId if o.area else None
-        return d
+def _cache_invalidate(wrapped, typed, *args, **kwargs):
+    key = _make_key(args, kwargs, typed)
+
+    exists = key in wrapped._cache
+
+    if exists:
+        wrapped._cache.pop(key)
+
+    return exists
 
 
-class PortEncoder(WithInfoEncoder):
-    def default(self, o: Port) -> dict:
-        d = super().default(o)
-        d['zone'] = o.zone
-        d['geopoint'] = o.geopoint
-        d['province'] = o.province.objectId if o.province else None
-        return d
+def _cache_clear(wrapped):
+    wrapped.hits = wrapped.misses = 0
+    wrapped._cache = OrderedDict()
+    wrapped.tasks = set()
 
 
-_PRE_ID = 'ID'
-_PRE_RID = 'RID'
+def _open(wrapped):
+    if not wrapped.closed:
+        raise RuntimeError("alru_cache is not closed")
+
+    was_closed = (
+        wrapped.hits == wrapped.misses == len(
+            wrapped.tasks) == len(wrapped._cache) == 0
+    )
+
+    if not was_closed:
+        raise RuntimeError("alru_cache was not closed correctly")
+
+    wrapped.closed = False
 
 
-@singleton
-class CacheDB:
-    """Cache util for db module."""
+def _close(wrapped, *, cancel=False, return_exceptions=True):
+    if wrapped.closed:
+        raise RuntimeError("alru_cache is closed")
 
-    # TODO: Consider using third-part local database, such as sqlite3
-    def __init__(self, dump: str = 'cache.json', db_util: BaseDbUtil = None, *args, **kwargs) -> None:
-        """
-        :param dump: Dump json file name to load and save data.
-        :param db_util: Inner db util for :class:`DbUtil`
-        """
-        self.cache_areas = {}  # cache, index areas
-        self.cache_provinces = {}  # index provinces
-        self.cache_ports = {}  # index ports
-        self.db_util = db_util
-        self.dargs = args
-        self.dkwargs = kwargs
-        self.dump_file_name = dump
-        if os.path.exists(dump):
-            if not os.path.isfile(dump):
-                raise ValueError(f'{dump} is not a file.')
-        else:
-            self.init_dump_file()
+    wrapped.closed = True
 
-    def init_dump_file(self):
-        """
-        Create a dump file with an empty json object.
+    if cancel:
+        for task in wrapped.tasks:
+            if not task.done():  # not sure is it possible
+                task.cancel()
 
-        NOTE
-        ------------
-        This will clean all dump data.
-        """
-        with open(self.dump_file_name, 'w', *self.dargs, **self.dkwargs) as f:
-            f.write('{}')
+    return _wait_closed(wrapped, return_exceptions=return_exceptions)
 
-    def save(self):
-        """Save caches to dump file."""
-        with open('w', self.dump_file_name, encoding='utf-8') as f:
-            json.dump(self.cache_areas, f)
 
-    def load(self):
-        """Load caches from dump file."""
-        with open('r', self.dump_file_name, encoding='utf-8') as f:
-            self.cache_areas = json.load(f)
+async def _wait_closed(wrapped, *, return_exceptions):
+    wait_closed = asyncio.gather(
+        *wrapped.tasks, return_exceptions=return_exceptions)
 
-    def __set_key(self, cache: dict, origin: WithInfo, value: dict):
-        cache[_PRE_ID+origin.objectId] = value
-        cache[_PRE_RID+origin.rid] = value
+    wait_closed.add_done_callback(partial(_close_waited, wrapped))
 
-    def __del_key(self, cache: dict, origin: WithInfo):
-        cache.pop(_PRE_ID+origin.objectId, None)
-        cache.pop(_PRE_RID+origin.rid, None)
+    ret = await wait_closed
 
-    def _add_area(self, area: Area):
-        """Add :param:`area` in cache."""
-        enc = AreaEncoder().default(area)
-        self.__set_key(self.cache_areas, area, enc)
+    # hack to get _close_waited callback to be executed
+    await asyncio.sleep(0)
 
-    def _rm_area(self, area: Area):
-        """
-        Remove :param:`area` from cache.
-        Provinces and ports which belongs to this area will remove too.
-        """
-        for province in self.cache_areas[_PRE_ID+area.objectId]['provinces']:
-            self._rm_province(province['origin'])
-        self.__del_key(self.cache_areas, area)
-        self.cache_areas.pop(_PRE_RID+area.rid, None)
+    return ret
 
-    def _add_province(self, province: Province):
-        """Add :param:`province` in cache."""
-        enc = ProvinceEncoder().default(province)
-        area = province.area
-        provinces = self.cache_areas[_PRE_ID + area.objectId]['provinces']
-        self.__set_key(provinces, province, enc)
-        self.__set_key(self.cache_provinces, province, enc)
 
-    def _rm_province(self, province: Province):
-        area = province.area
-        for port in self.cache_provinces[_PRE_ID+province.objectId]['ports']:
-            self._rm_port(port['origin'])
-        self.__del_key(self.cache_provinces, province)
-        self.cache_areas[_PRE_ID +
-                         area.objectId]['provinces'].pop(_PRE_ID+province.objectId, None)
-        self.cache_areas[_PRE_RID+area.rid]['provinces'].pop(_PRE_ID+province)
+def _close_waited(wrapped, _):
+    wrapped.cache_clear()
 
-    def _add_port(self, port: Port):
-        enc = PortEncoder().default(port)
-        province = port.province
-        ports = self.cache_provinces[_PRE_ID + province.objectId]['ports']
-        ports[_PRE_ID+port.objectId] = enc
-        self.cache_provinces[_PRE_RID +
-                             province.rid]['ports'][_PRE_RID+port.rid] = enc
-        self.cache_ports[_PRE_ID+province.objectId] = enc
-        self.cache_ports[_PRE_RID+province.rid] = enc
 
-    def _rm_port(self, port: Port):
-        pid = _PRE_ID+port.objectId
-        prid = _PRE_RID+port.rid
-        self.cache_ports.pop(pid, None)
-        self.cache_ports.pop(prid, None)
-        province = port.province
-        ports = self.cache_provinces[_PRE_ID + province.objectId]['ports']
-        ports.pop(pid, None)
-        ports.pop(prid, None)
+def _cache_info(wrapped, maxsize):
+    return _CacheInfo(
+        wrapped.hits,
+        wrapped.misses,
+        maxsize,
+        len(wrapped._cache),
+    )
 
-    def get_area(self, area: str, col: IDT) -> Optional[Area]:
-        """Get cached area."""
-        area_dic = self._get_area_dict(area, col)
-        return area_dic['origin'] if area_dic else None
 
-    def __get_keys(self, caches: dict, key: str) -> list:
-        return list({o[key] for o in caches.values()})
+def __cache_touch(wrapped, key):
+    try:
+        wrapped._cache.move_to_end(key)
+    except KeyError:  # not sure is it possible
+        pass
 
-    def get_areas(self) -> List[Area]:
-        return self.__get_keys(self.cache_areas, 'origin')
 
-    def _get_area_dict(self, area: str, col: IDT) -> Optional[Area]:
-        return switch_idt(col, lambda: self.cache_areas.get(_PRE_ID+area),
-                          lambda: self.cache_areas.get(_PRE_RID+area))
+def _cache_hit(wrapped, key):
+    wrapped.hits += 1
+    __cache_touch(wrapped, key)
 
-    def get_province(self, province, col: IDT) -> Optional[Province]:
-        """Get cached province."""
-        province_dic = self._get_province_dict(province, col)
-        return province_dic['origin'] if province_dic else None
 
-    def _get_province_dict(self, province: str, col: IDT) -> Optional[Province]:
-        return switch_idt(col, lambda: self.cache_provinces.get(_PRE_ID+province),
-                          lambda: self.cache_provinces.get(_PRE_RID+province))
+def _cache_miss(wrapped, key):
+    wrapped.misses += 1
+    __cache_touch(wrapped, key)
 
-    def get_provinces(self, area: str, col: IDT) -> Optional[List[Province]]:
-        area_dic = self._get_area_dict(area, col)
-        return None if not area_dic else self.__get_keys(self.cache_provinces, 'origin')
 
-    def get_port(self, port: str, col: IDT) -> Optional[Port]:
-        """Get cached port."""
-        port_dic = self._get_port_dict(port, col)
-        return port_dic['origin'] if port_dic else None
+def alru_cache(
+    fn=None,
+    maxsize=128,
+    typed=False,
+    *,
+    cache_exceptions=True,
+):
+    def wrapper(fn):
+        _origin = unpartial(fn)
 
-    def get_ports(self, province: str, col: IDT) -> Optional[List[Port]]:
-        province_dic = self._get_province_dict(province, col)
-        return None if not province_dic else self.__get_keys(self.cache_provinces, 'origin')
+        if not asyncio.iscoroutinefunction(_origin):
+            raise RuntimeError(
+                "Coroutine function is required, got {}".format(fn))
 
-    def _get_port_dict(self, port: str, col: IDT) -> Optional[Port]:
-        return switch_idt(col, lambda: self.cache_ports.get(_PRE_ID+port),
-                          lambda: self.cache_ports.get(_PRE_RID+port))
+        # functools.partialmethod support
+        if hasattr(fn, "_make_unbound_method"):
+            fn = fn._make_unbound_method()
 
-    async def refresh_areas(self):
-        """
-        Re-fetch all areas data to cache.
+        @wraps(fn)
+        async def wrapped(*fn_args, **fn_kwargs):
+            if wrapped.closed:
+                raise RuntimeError(
+                    "alru_cache is closed for {}".format(wrapped))
 
-        NOTE
-        ----------
-        It will clean all cache.
-        """
-        self.cache_areas.clear()
-        self.cache_provinces.clear()
-        self.cache_ports.clear()
-        areas = await DbUtil(self.db_util).get_areas()
-        for area in areas:
-            self._add_area(area)
+            loop = asyncio.get_event_loop()
 
-    async def refresh_provinces(self, area_id: Optional[str]):
-        """
-        Re-fetch provinces which belongs to :param:`area_id`.
+            key = _make_key(fn_args, fn_kwargs, typed)
 
-        :param area_id:
-            `Area.objectId`. It will get area from db if this area not found in cache.
-            Or Set to ``None`` to refresh all provinces. Will not refresh areas.
-        :raise ValueError: Set :param:`area_id`, but not cache it and not find from db.
-        """
-        async def refresh(aid: str):
-            ps = await DbUtil(self.db_util).get_provinces(aid, col=IDT.ID)
-            for p in ps:
-                self._add_province(p)
+            fut = wrapped._cache.get(key)
 
-        if Value.is_any_none_or_whitespace(area_id):
-            self.cache_provinces.clear()
-            self.cache_areas[_PRE_ID+aid]['provinces'].clear()
-            # self.cache_areas[_PRE_RID+aid]['provinces'].clear()
-            for aid in self.cache_areas.keys():
-                await refresh(aid)
-        else:
-            if _PRE_ID+area_id not in self.cache_areas.keys():
-                area = await DbUtil(self.db_util).get_area(area_id, IDT.ID)
-                if area is None:
-                    raise ValueError(f'area id {area_id} not found.')
-                self._add_area(area)
-            rmkeys = [k for k, v in self.cache_provinces.items()
-                      if v['area'] == area_id]
-            [self.cache_provinces.pop(k, None) for k in rmkeys]
-            await refresh(area_id)
+            if fut is not None:
+                if not fut.done():
+                    _cache_hit(wrapped, key)
+                    return await asyncio.shield(fut)
 
-    async def refresh_ports(self, province_id: Optional[str]):
-        """
-        Re-fetch ports which belongs to :param:`province_id`.
+                exc = fut._exception
 
-        :param province_id:
-            `Province.objectId`. It will get province from db if this province not found in cache.
-            Or Set to ``None`` to refresh all ports. Will not refresh areas and provinces.
-        :raise ValueError: Set :param:`province_id`, but not cache it and not find from db.
-        """
-        async def refresh(pid: str):
-            ps = await DbUtil(self.db_util).get_ports(pid, col=IDT.ID)
-            self.cache_provinces[pid]['ports'].clear()
-            for p in ps:
-                enc = PortEncoder().default(p)
-                self.cache_provinces[pid]['ports'][p.objectId] = enc
-                self.cache_ports.update({p.objectId: enc})
+                if exc is None or cache_exceptions:
+                    _cache_hit(wrapped, key)
+                    return fut.result()
 
-        if Value.is_any_none_or_whitespace(province_id):
-            self.cache_ports.clear()
-            for pid in self.cache_provinces.keys():
-                await refresh(pid)
-        else:
-            if _PRE_ID + province_id not in self.cache_provinces.keys():
-                province = await DbUtil(self.db_util).get_province(
-                    province_id, IDT.ID)
-                if province is None:
-                    raise ValueError(f'province id {province_id} not found.')
-                self.cache_provinces[province_id] = province
-            await refresh(province_id)
+                # exception here and cache_exceptions == False
+                wrapped._cache.pop(key)
+
+            fut = loop.create_future()
+            task = loop.create_task(fn(*fn_args, **fn_kwargs))
+            task.add_done_callback(partial(_done_callback, fut))
+
+            wrapped.tasks.add(task)
+            task.add_done_callback(wrapped.tasks.remove)
+
+            wrapped._cache[key] = fut
+
+            if maxsize is not None and len(wrapped._cache) > maxsize:
+                wrapped._cache.popitem(last=False)
+
+            _cache_miss(wrapped, key)
+            return await asyncio.shield(fut)
+
+        _cache_clear(wrapped)
+        wrapped._origin = _origin
+        wrapped.closed = False
+        wrapped.cache_info = partial(_cache_info, wrapped, maxsize)
+        wrapped.cache_clear = partial(_cache_clear, wrapped)
+        wrapped.invalidate = partial(_cache_invalidate, wrapped, typed)
+        wrapped.close = partial(_close, wrapped)
+        wrapped.open = partial(_open, wrapped)
+
+        return wrapped
+
+    if fn is None:
+        return wrapper
+
+    if callable(fn) or hasattr(fn, "_make_unbound_method"):
+        return wrapper(fn)
+
+    raise NotImplementedError("{} decorating is not supported".format(fn))

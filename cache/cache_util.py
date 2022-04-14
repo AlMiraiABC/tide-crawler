@@ -1,5 +1,4 @@
 from datetime import date
-from functools import lru_cache
 from typing import Any, List, Optional, Tuple, TypeVar, Union
 
 from services.crawler_service import CrawlerService
@@ -10,9 +9,10 @@ from storages.model import Area, Port, Province, Tide, WithInfo
 from utils.singleton import singleton
 from utils.validate import Value
 
-from cache.cache import CacheDB
+from cache.cache import alru_cache
+from cache.cache_db import CacheDB
 
-_ClazzWithInfo = TypeVar('_ClazzWithInfo', WithInfo)
+_ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
 
 
 EXECSTATE_SUCCESS = [ExecState.CREATE, ExecState.SUCCESS, ExecState.UPDATE]
@@ -163,7 +163,7 @@ class CacheUtil(BaseDbUtil):
                 return p
         return None
 
-    @lru_cache(maxsize=1024, typed=True)
+    @alru_cache(maxsize=1024, typed=True)
     async def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
         if Value.is_any_none_or_whitespace(port_id):
             raise ValueError("port_id cannot be null or empty.")
@@ -172,7 +172,8 @@ class CacheUtil(BaseDbUtil):
         tide = await DbUtil().get_tide(port_id, d)
         if tide is not None:
             return tide
-        return await CrawlerService().crawl_tide(d, port_id)
+        port = await DbUtil().get_port(port_id, IDT.ID)
+        return await CrawlerService().crawl_tide(d, port.rid)
 
     async def get_areas(self) -> List[Area]:
         return self.cache.get_areas()
