@@ -95,7 +95,7 @@ class LCUtil(BaseDbUtil):
         try:
             obj.save()
             self.logger.debug(
-                f"create new {type(obj).__name__} {obj.id} successfully.")
+                f"create new {type(obj).__name__} {obj.objectId} successfully.")
             return ExecState.CREATE, obj
         except Exception as err:  # create err
             self.logger.error(f"create {type(obj).__name__} failed {obj.__dict__}. {err}",
@@ -105,7 +105,7 @@ class LCUtil(BaseDbUtil):
     @_login()
     async def __get(self, obj: _ObjClazz, col: IDT, clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None):
         """Wrapper for :fun:`__get_by_id` to get `objid` from :param:`obj`"""
-        return await self.__get_by_id(switch_idt(col, obj.id, obj.rid), col, clazz, rid_query)
+        return await self.__get_by_id(switch_idt(col, obj.objectId, obj.rid), col, clazz, rid_query)
 
     @_login()
     async def __get_by_id(self, objid: str, col: IDT, clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None) -> Tuple[ExecState, Union[Optional[_Clazz], Exception]]:
@@ -128,7 +128,7 @@ class LCUtil(BaseDbUtil):
                 if Value.is_any_none_or_whitespace(objid) \
                 else (ExecState.EXIST, q.get(objid))
         try:
-            # TODO consider using `clazz.create_without_data`` instead of `q.get``
+            # HACK consider using `clazz.create_without_data`` instead of `q.get``
             return switch_idt(col, id_cb, lambda: (ExecState.EXIST, rid_query()))
         except Exception as ex:
             errmsg = f'occured an error when get object by {col}({objid}). {ex}'
@@ -172,10 +172,10 @@ class LCUtil(BaseDbUtil):
         :return: (execute-state, inserted-or-updated-object)
         """
         r, o = await self.__get(obj, col, clazz, rid_query)
+        if r == ExecState.FAIL:
+            return ExecState.FAIL, o
+        ins = save(o)
         try:
-            if r == ExecState.FAIL:
-                return ExecState.FAIL, o
-            ins = save(o)
             if not isinstance(ins, LCWithInfo):
                 raise TypeError(
                     f"Except {LCWithInfo.__name__} but got {type(ins)} from :param:`save`")
@@ -183,8 +183,9 @@ class LCUtil(BaseDbUtil):
                 raise LeanCloudError(101, '')  # to save
             if r == ExecState.EXIST:
                 await async_wrap(ins.save)()
+                # FIXME: cannot update, throw 403 forbidden with acl wrong.
                 self.logger.debug(
-                    f"update {type(ins).__name__} {ins.id} successfully.")
+                    f"update {type(ins).__name__} {ins.objectId} successfully.")
                 return ExecState.UPDATE, ins
         except Exception as ex:
             errmsg = f"add {type(ins).__name__} failed {ins.__dict__}. {ex}"
@@ -236,15 +237,6 @@ class LCUtil(BaseDbUtil):
         return await self.try_insert(port, col, save, LCPort, query.equal_to(LCPort.RID, port.rid).equal_to(LCPort.PROVINCE, province))
 
     @_login()
-    async def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Union[LCTide, Exception]]:
-        def save(o: Optional[LCTide]):
-            o = self.__before_save(tide, o, LCTide)
-            o.port = tide.port
-            o.date = tide.date
-            o.datum = tide.datum
-            o.day = tide.day
-            o.limit = tide.limit
-
     async def add_tide(self, tide: Tide, col: IDT) -> Tuple[ExecState, Union[Optional[LCTide], Exception]]:
         t: LCTide = LCTide()
         (ret, port) = await self.__get(tide.port, col, LCPort)
