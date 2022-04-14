@@ -8,7 +8,8 @@
         "crawler",
         "service",
         "web",
-        "cache"
+        "cache",
+        "task"
     ],
     "python.testing.unittestArgs": [
         "-v",
