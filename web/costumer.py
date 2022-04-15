@@ -13,14 +13,14 @@ routes = web.RouteTableDef()
 
 
 @routes.get('/list/areas')
-@alru_cache
+# @alru_cache # TODO: type Request is unhashtable
 async def get_areas(_):
     areas = await CacheUtil().get_areas()
     return wrap_response(to_models(areas, to_area_model))
 
 
 @routes.get('/list/provinces/{area}')
-@alru_cache
+# @alru_cache
 async def get_provinces(request: Request):
     area_id = request.match_info.get('area')
     provinces = await CacheUtil().get_provinces(area_id, IDT.ID)
@@ -28,7 +28,7 @@ async def get_provinces(request: Request):
 
 
 @routes.get('/list/ports/{province}')
-@alru_cache
+# @alru_cache
 async def get_ports(request: Request):
     province_id = request.match_info.get('province')
     ports = await CacheUtil().get_provinces(province_id, IDT.ID)
@@ -36,7 +36,7 @@ async def get_ports(request: Request):
 
 
 @routes.get('/area/{id}')
-@alru_cache
+# @alru_cache
 async def get_area(request: Request):
     pid = request.match_info.get('id')
     area = await CacheUtil().get_area(pid, IDT.ID)
@@ -44,7 +44,7 @@ async def get_area(request: Request):
 
 
 @routes.get('/province/{id}')
-@alru_cache
+# @alru_cache
 async def get_province(request: Request):
     pid = request.match_info.get('id')
     province = await CacheUtil().get_province(pid, IDT.ID)
@@ -52,7 +52,7 @@ async def get_province(request: Request):
 
 
 @routes.get('/port/{id}')
-@alru_cache
+# @alru_cache
 async def get_port(request: Request):
     pid = request.match_info.get('id')
     port = await CacheUtil().get_port(pid, IDT.ID)
@@ -60,7 +60,7 @@ async def get_port(request: Request):
 
 
 @routes.get('/tide/{port}/{date}')
-@alru_cache
+# @alru_cache
 async def get_tide(request: Request):
     port_id = request.match_info.get('port')
     date_str = request.match_info.get('date')
