@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Callable, List, Tuple, TypedDict
 
-from aiohttp import WebSocketError
+from aiohttp import web
 from aiohttp.web import Response
 from storages.model import Area, Port, Province, Tide, TideItemDict, WithInfo
 
@@ -40,7 +40,7 @@ class BaseResponse(TypedDict):
 
 def wrap_response(data={}, code=0, msg='success', err='') -> Response:
     resp = BaseResponse(code=code, msg=msg, err=err, data=data)
-    return WebSocketError.json_response(resp)
+    return web.json_response(resp)
 
 
 def to_base_model(o: WithInfo) -> BaseModel:
