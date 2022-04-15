@@ -99,7 +99,8 @@ class CacheDB:
 
     def load(self):
         """Load caches from dump file."""
-        with open('r', self.dump_file_name, encoding='utf-8') as f:
+        # TODO: origin, convert dict to object
+        with open(self.dump_file_name, 'r',  encoding='utf-8') as f:
             self.cache_areas = json.load(f)
 
     def __set_key(self, cache: dict, origin: WithInfo, value: dict):
