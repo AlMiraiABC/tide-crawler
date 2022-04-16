@@ -6,7 +6,7 @@ from storages.basedbutil import IDT, BaseDbUtil, switch_idt
 from storages.common import ExecState
 from storages.dbutil import DbUtil
 from storages.model import Area, Port, Province, Tide, WithInfo
-from utils.singleton import singleton
+from utils.singleton import Singleton
 from utils.validate import Value
 
 from cache.cache import alru_cache
@@ -18,8 +18,7 @@ _ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
 EXECSTATE_SUCCESS = [ExecState.CREATE, ExecState.SUCCESS, ExecState.UPDATE]
 
 
-@singleton
-class CacheUtil(BaseDbUtil):
+class CacheUtil(BaseDbUtil, Singleton):
     def __init__(self) -> None:
         super().__init__()
         self.cache = CacheDB()

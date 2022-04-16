@@ -2,7 +2,7 @@ from datetime import date
 from typing import Any, List, Optional, Tuple, Union
 
 from config import STORAGE, Storages
-from utils.singleton import singleton
+from utils.singleton import Singleton
 from utils.validate import Value
 
 from storages.basedbutil import IDT, BaseDbUtil
@@ -12,8 +12,7 @@ from storages.model import Area, Port, Province, Tide
 from storages.rdb.rdb_util import RDBUtil
 
 
-@singleton
-class DbUtil(BaseDbUtil):
+class DbUtil(BaseDbUtil, Singleton):
     """Wrapper for all storage operations."""
 
     def __init__(self, db_util: BaseDbUtil = None) -> None:

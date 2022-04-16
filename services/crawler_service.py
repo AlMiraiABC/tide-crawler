@@ -6,11 +6,10 @@ from storages.model import Area, Port, Province, Tide
 
 from services.basecrawlerservice import BaseCrawlerService
 from services.nmdis_service import NmdisService
-from utils.singleton import singleton
+from utils.singleton import Singleton
 
 
-@singleton
-class CrawlerService(BaseCrawlerService):
+class CrawlerService(BaseCrawlerService, Singleton):
     def __init__(self) -> None:
         super().__init__()
         if CRAWLER == Crawlers.NMDIS:

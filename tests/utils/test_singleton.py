@@ -1,9 +1,8 @@
 from unittest import TestCase
-from utils.singleton import singleton
+from utils.singleton import Singleton
 
 
-@singleton
-class _SingletonClass():
+class _SingletonClass(Singleton):
     def __init__(self, *args, **kwargs) -> None:
         pass
 

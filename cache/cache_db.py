@@ -6,7 +6,7 @@ from typing import List, Optional
 from storages.basedbutil import IDT, BaseDbUtil, switch_idt
 from storages.dbutil import DbUtil
 from storages.model import Area, BaseClazz, Port, Province, WithInfo
-from utils.singleton import singleton
+from utils.singleton import Singleton
 from utils.validate import Value
 
 
@@ -57,8 +57,7 @@ _PRE_ID = 'ID'
 _PRE_RID = 'RID'
 
 
-@singleton
-class CacheDB:
+class CacheDB(Singleton):
     """Cache storage for db module."""
 
     # HACK: Consider using third-part local database, such as sqlite3

@@ -1,8 +1,14 @@
-def singleton(cls):
-    instances = {}
+# five way to create a singleton class instance
+# https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
+class SingletonMeta(type):
+    _instances = {}
 
-    def getinstance(*args, **kwargs):
-        if cls not in instances:
-            instances[cls] = cls(*args, **kwargs)
-        return instances[cls]
-    return getinstance
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(
+                SingletonMeta, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class Singleton(metaclass=SingletonMeta):
+    pass
