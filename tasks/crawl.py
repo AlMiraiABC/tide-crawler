@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from datetime import date
-from typing import Callable, Coroutine, List, Optional, Tuple, TypeVar, Union
+from typing import Callable, Awaitable, List, Optional, Tuple, TypeVar, Union
 
 from services.crawler_service import CrawlerService
 from storages.basedbutil import IDT
@@ -15,7 +15,7 @@ _T = TypeVar('_T', bound=WithInfo)
 _logger = Logger('crawl').logger
 
 
-async def inserts(os: List[_T], save: Callable[[_T], Coroutine[None, None, Tuple[ExecState, Union[Optional[_T], Exception]]]]):
+async def inserts(os: List[_T], save: Callable[[_T], Awaitable[Tuple[ExecState, Union[Optional[_T], Exception]]]]):
     ret: List[Tuple[ExecState, Union[Optional[_T], Exception]]] = []
     for o in os:
         (r, obj) = await save(o)

@@ -1,8 +1,9 @@
-from typing import Any, Callable, Coroutine, Dict, List, Tuple, Type
+from typing import Awaitable, Callable, Dict, List, Tuple, Type
+
 from aiohttp import web
 from aiohttp.web import Request, Response
 
-HandleType = Callable[[Request], Coroutine[Any, Any, Response]]
+HandleType = Callable[[Request], Awaitable[ Response]]
 
 
 _http_handler: Dict[int, HandleType] = {}
