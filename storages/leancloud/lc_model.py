@@ -13,13 +13,10 @@ from storages.model import Area, BaseClazz, Port, Province, Tide, TideItem, Tide
 
 from leancloud import GeoPoint, Object
 
-
-class _LCMeta(type(Object), type(BaseClazz)):
-    """Meta class to resolve conflict metaclass error."""
-    pass
+from utils.meta import merge_meta
 
 
-class LCBaseClazz(Object, BaseClazz, metaclass=_LCMeta):
+class LCBaseClazz(merge_meta(Object, BaseClazz)):
     OBJECT_ID = 'objectId'
     CREATED_AT = 'createdAt'
     UPDATED_AT = 'updatedAt'

@@ -2,6 +2,7 @@ from datetime import date
 from typing import Any, List, Optional, Tuple, Union
 
 from config import STORAGE, Storages
+from utils.meta import merge_meta
 from utils.singleton import Singleton
 from utils.validate import Value
 
@@ -12,7 +13,7 @@ from storages.model import Area, Port, Province, Tide
 from storages.rdb.rdb_util import RDBUtil
 
 
-class DbUtil(BaseDbUtil, Singleton):
+class DbUtil(merge_meta(BaseDbUtil, Singleton)):
     """Wrapper for all storage operations."""
 
     def __init__(self, db_util: BaseDbUtil = None) -> None:

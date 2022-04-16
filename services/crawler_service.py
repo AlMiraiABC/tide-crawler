@@ -3,13 +3,14 @@ from typing import List, Optional
 
 from config import CRAWLER, Crawlers
 from storages.model import Area, Port, Province, Tide
+from utils.meta import merge_meta
+from utils.singleton import Singleton
 
 from services.basecrawlerservice import BaseCrawlerService
 from services.nmdis_service import NmdisService
-from utils.singleton import Singleton
 
 
-class CrawlerService(BaseCrawlerService, Singleton):
+class CrawlerService(merge_meta(BaseCrawlerService, Singleton)):
     def __init__(self) -> None:
         super().__init__()
         if CRAWLER == Crawlers.NMDIS:

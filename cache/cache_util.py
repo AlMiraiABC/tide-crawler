@@ -6,6 +6,7 @@ from storages.basedbutil import IDT, BaseDbUtil, switch_idt
 from storages.common import ExecState
 from storages.dbutil import DbUtil
 from storages.model import Area, Port, Province, Tide, WithInfo
+from utils.meta import merge_meta
 from utils.singleton import Singleton
 from utils.validate import Value
 
@@ -18,7 +19,8 @@ _ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
 EXECSTATE_SUCCESS = [ExecState.CREATE, ExecState.SUCCESS, ExecState.UPDATE]
 
 
-class CacheUtil(BaseDbUtil, Singleton):
+
+class CacheUtil(merge_meta(BaseDbUtil,Singleton)):
     def __init__(self) -> None:
         super().__init__()
         self.cache = CacheDB()
