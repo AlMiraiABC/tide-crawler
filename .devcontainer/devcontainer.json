@@ -36,7 +36,8 @@
 		"redhat.vscode-yaml",
 		"ms-ceintl.vscode-language-pack-zh-hans",
 		"vivaxy.vscode-conventional-commits",
-		"ryanluker.vscode-coverage-gutters"
+		"ryanluker.vscode-coverage-gutters",
+		"TabNine.tabnine-vscode"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
