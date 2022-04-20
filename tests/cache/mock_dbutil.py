@@ -38,12 +38,15 @@ def random_str(s='0123456789abcdef', l=24):
     """Generate a random string from :param:`s` with :param:`l` length."""
     return ''.join(random.choices(s, k=l))
 
-def read():
-    with open('tests/utils/mock.json') as f:
+
+def load_mock_data():
+    with open('tests/cache/mock.json') as f:
         return json.load(f)
+
+
 class MockDbUtil(BaseDbUtil):
     def __init__(self) -> None:
-        self.data: List[dict] = read()
+        self.data: List[dict] = load_mock_data()
 
     def __convert(self, a: MockWithInfo, o: dict):
         a.objectId = o['objectId']
