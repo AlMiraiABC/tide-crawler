@@ -1,5 +1,4 @@
 {
-    "python.defaultInterpreterPath": "D:\\conda\\envs\\TideCrawler\\python.exe",
     "conventionalCommits.scopes": [
         "db",
         "util",
