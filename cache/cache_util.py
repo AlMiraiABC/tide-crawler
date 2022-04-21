@@ -19,8 +19,7 @@ _ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
 EXECSTATE_SUCCESS = [ExecState.CREATE, ExecState.SUCCESS, ExecState.UPDATE]
 
 
-
-class CacheUtil(merge_meta(BaseDbUtil,Singleton)):
+class CacheUtil(merge_meta(BaseDbUtil, Singleton)):
     def __init__(self) -> None:
         super().__init__()
         self.cache = CacheDB()
@@ -85,7 +84,7 @@ class CacheUtil(merge_meta(BaseDbUtil,Singleton)):
             return True
         return None
 
-    async def __valid_none(self, o: Any, name: str):
+    def __valid_none(self, o: Any, name: str):
         if o is None:
             raise ValueError(f"{name} cannot be null")
 
@@ -134,35 +133,17 @@ class CacheUtil(merge_meta(BaseDbUtil,Singleton)):
     async def get_area(self, area_id: str, col: IDT) -> Optional[Area]:
         if Value.is_any_none_or_whitespace(area_id):
             raise ValueError("area_id cannot be null or empty.")
-        area = self.cache.get_area(area_id, col)
-        if area is None:
-            a = await DbUtil().get_area(area_id, col)
-            if a is not None:
-                self.cache._add_area(a)
-                return a
-        return None
+        return self.cache.get_area(area_id, col)
 
     async def get_province(self, province_id: str, col: IDT) -> Optional[Province]:
         if Value.is_any_none_or_whitespace(province_id):
             raise ValueError("province_id cannot be null or empty.")
-        province = self.cache.get_province(province_id, col)
-        if province is None:
-            p = await DbUtil().get_province(province_id, col)
-            if p is not None:
-                self.cache._add_province(p)
-                return p
-        return None
+        return self.cache.get_province(province_id, col)
 
     async def get_port(self, port_id: str, col: IDT) -> Optional[Port]:
         if Value.is_any_none_or_whitespace(port_id):
             raise ValueError("port_id cannot be null or empty.")
-        port = self.cache.get_port(port_id, col)
-        if port is None:
-            p = await DbUtil().get_port(port_id, col)
-            if p is not None:
-                self.cache._add_port(p)
-                return p
-        return None
+        return self.cache.get_port(port_id, col)
 
     @alru_cache(maxsize=1024, typed=True)
     async def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
@@ -180,7 +161,11 @@ class CacheUtil(merge_meta(BaseDbUtil,Singleton)):
         return self.cache.get_areas()
 
     async def get_provinces(self, area_id: str, col: IDT = None) -> List[Province]:
+        if Value.is_any_none_or_whitespace(area_id):
+            raise ValueError("area_id cannot be null or empty")
         return self.cache.get_provinces(area_id, col)
 
     async def get_ports(self, province_id: str, col: IDT = None) -> List[Port]:
+        if Value.is_any_none_or_whitespace(province_id):
+            raise ValueError("province_id cannot be null or empty")
         return self.cache.get_ports(province_id, col)
