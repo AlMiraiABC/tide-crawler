@@ -1,11 +1,12 @@
+import asyncio
 import json
-import os
 from json import JSONEncoder
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from storages.basedbutil import IDT, BaseDbUtil, switch_idt
 from storages.dbutil import DbUtil
 from storages.model import Area, BaseClazz, Port, Province, WithInfo
+from utils.async_util import run_async
 from utils.singleton import Singleton
 from utils.validate import Value
 
@@ -61,46 +62,25 @@ class CacheDB(Singleton):
     """Cache storage for db module."""
 
     # HACK: Consider using third-part local database, such as sqlite3
-    def __init__(self, dump: str = 'cache.json', db_util: BaseDbUtil = None, *args, **kwargs) -> None:
+    def __init__(self, db_util: BaseDbUtil = None, *args, **kwargs) -> None:
         """
-        :param dump: Dump json file name to load and save data.
         :param db_util: Inner db util for :class:`DbUtil`
         """
-        self.cache_areas = {}  # cache, index areas
-        self.cache_provinces = {}  # index provinces
-        self.cache_ports = {}  # index ports
+        self.cache_areas: Dict[str, dict] = {}  # cache, index areas
+        self.cache_provinces: Dict[str, dict] = {}  # index provinces
+        self.cache_ports: Dict[str, dict] = {}  # index ports
         self.db_util = db_util
         self.dargs = args
         self.dkwargs = kwargs
-        self.dump_file_name = dump
-        if os.path.exists(dump):
-            if not os.path.isfile(dump):
-                raise ValueError(f'{dump} is not a file.')
-        else:
-            self.init_dump_file()
-        self.load()
+        run_async(self.refresh())
 
-    def init_dump_file(self):
-        """
-        Create a dump file with an empty json object.
-
-        NOTE
-        ------------
-        This will clean all dump data.
-        """
-        with open(self.dump_file_name, 'w', *self.dargs, **self.dkwargs) as f:
-            f.write('{}')
-
-    def save(self):
-        """Save caches to dump file."""
-        with open('w', self.dump_file_name, encoding='utf-8') as f:
-            json.dump(self.cache_areas, f)
-
-    def load(self):
-        """Load caches from dump file."""
-        # TODO: origin, convert dict to object
-        with open(self.dump_file_name, 'r',  encoding='utf-8') as f:
-            self.cache_areas = json.load(f)
+    async def refresh(self):
+        """Refresh all cached data."""
+        await self.refresh_areas()
+        for _, area in self.cache_areas.items():
+            await self.refresh_provinces(area['objectId'])
+        for _, province in self.cache_provinces.items():
+            await self.refresh_ports(province['objectId'])
 
     def __set_key(self, cache: dict, origin: WithInfo, value: dict):
         cache[_PRE_ID+origin.objectId] = value
@@ -149,8 +129,8 @@ class CacheDB(Singleton):
         ports[_PRE_ID+port.objectId] = enc
         self.cache_provinces[_PRE_RID +
                              province.rid]['ports'][_PRE_RID+port.rid] = enc
-        self.cache_ports[_PRE_ID+province.objectId] = enc
-        self.cache_ports[_PRE_RID+province.rid] = enc
+        self.cache_ports[_PRE_ID+port.objectId] = enc
+        self.cache_ports[_PRE_RID+port.rid] = enc
 
     def _rm_port(self, port: Port):
         pid = _PRE_ID+port.objectId
@@ -260,11 +240,9 @@ class CacheDB(Singleton):
         """
         async def refresh(pid: str):
             ps = await DbUtil(self.db_util).get_ports(pid, col=IDT.ID)
-            self.cache_provinces[pid]['ports'].clear()
+            self.cache_provinces[_PRE_ID + pid]['ports'].clear()
             for p in ps:
-                enc = PortEncoder().default(p)
-                self.cache_provinces[pid]['ports'][p.objectId] = enc
-                self.cache_ports.update({p.objectId: enc})
+                self._add_port(p)
 
         if Value.is_any_none_or_whitespace(province_id):
             self.cache_ports.clear()
@@ -276,5 +254,8 @@ class CacheDB(Singleton):
                     province_id, IDT.ID)
                 if province is None:
                     raise ValueError(f'province id {province_id} not found.')
-                self.cache_provinces[province_id] = province
+                self._add_province(province)
+            rmkeys = [k for k, v in self.cache_ports.items()
+                      if v['province'] == province_id]
+            [self.cache_ports.pop(k, None) for k in rmkeys]
             await refresh(province_id)
