@@ -54,7 +54,7 @@ def add(obj: _T, container=DEFAULT_CONTAINER_NAME) -> Optional[_T]:
     return c[t]
 
 
-def add_type(t: Type[_T], container=DEFAULT_CONTAINER_NAME, *args, **kwargs) -> Optional[_T]:
+def add_type(t: Type[_T], *args,  container=DEFAULT_CONTAINER_NAME, **kwargs) -> Optional[_T]:
     """
     Create a :param:`t` instance to the container
 
