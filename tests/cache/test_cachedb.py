@@ -2,7 +2,8 @@ from datetime import datetime
 from unittest import IsolatedAsyncioTestCase, TestCase
 
 from storages.basedbutil import IDT
-from tests.cache.mock_dbutil import MockBaseClazz, MockDbUtil
+from tests.cache.mock_dbutil import MockBaseClazz, MockDbUtil, load_mock_data
+from tests.storages.leancloud.test_lc_util import random_str
 
 from cache.cache_db import _PRE_ID, BaseClazzEncoder, CacheDB
 
@@ -30,6 +31,32 @@ class TestCacheDB(IsolatedAsyncioTestCase):
         cls.dbutil = MockDbUtil()
         cls.cachedb = CacheDB(db_util=cls.dbutil)
 
+    async def test_refresh(self):
+        data = load_mock_data()
+        await self.cachedb.refresh()
+        self.assertEquals(len(data), len(self.cachedb.cache_areas)/2, 'areas')
+        self.assertEquals(len(self.get_mock_provinces()), len(
+            self.cachedb.cache_provinces)/2, 'provinces')
+        self.assertEquals(len(self.get_mock_ports()), len(
+            self.cachedb.cache_ports)/2, 'ports')
+
+    def get_mock_areas(self):
+        return load_mock_data()
+
+    def get_mock_provinces(self):
+        areas = self.get_mock_areas()
+        provinces = []
+        for area in areas:
+            provinces += area.get('provinces', [])
+        return provinces
+
+    def get_mock_ports(self):
+        provinces = self.get_mock_provinces()
+        ports = []
+        for province in provinces:
+            ports += province.get('ports', [])
+        return ports
+
     async def test_refresh_areas(self):
         await self.cachedb.refresh_areas()
         self.assertDictEqual(self.cachedb.cache_provinces, {})
@@ -52,8 +79,24 @@ class TestCacheDB(IsolatedAsyncioTestCase):
         self.assertListEqual(ids, cids)
         self.assertListEqual(ids, pids)
 
-    def test_refresh_provinces_all(self):
+    async def test_refresh_provinces_all(self):
         pass
 
-    def test_refresh_provinces_unexist(self):
+    async def test_refresh_provinces_unexist(self):
+        with self.assertRaises(ValueError):
+            await self.cachedb.refresh_provinces(random_str())
+
+    async def test_refresh_ports(self):
+        self.cachedb.cache_ports.clear()
+        provinces = self.get_mock_provinces()[0]
+        ids = list({p['objectId'] for p in provinces['ports']})
+        await self.cachedb.refresh_ports(provinces['objectId'])
+        pids = list({p['objectId'] for p in self.cachedb.cache_ports.values()})
+        self.assertListEqual(ids, pids)
+
+    async def test_refresh_ports_all(self):
         pass
+
+    async def test_refresh_ports_unexist(self):
+        with self.assertRaises(ValueError):
+            await self.cachedb.refresh_ports(random_str())

@@ -149,8 +149,6 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
     async def test_add_area_id_exist(self):
         """add_area compared by id and exist so update it."""
         area = add_area()
-        id = area.objectId  # get new id
-        area = LCArea.create_without_data(id)
         area.raw = random_str()
         area.name = random_str()
         area.rid = random_str()
@@ -182,8 +180,7 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
     async def test_add_province_area_exist(self):
         """add_province by id """
         area = add_area()
-        a = LCArea.create_without_data(area.objectId)
-        province = add_province(a, False)
+        province = add_province(area, False)
         (ret, inserted) = await self.lc.add_province(province, IDT.ID)
         self.assertEquals(ret, ExecState.CREATE)
         self.assertEquals(inserted.area.objectId, area.objectId)
