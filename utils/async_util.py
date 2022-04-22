@@ -1,5 +1,6 @@
 import asyncio
 from functools import wraps, partial
+from typing import Any, Coroutine, TypeVar
 
 
 def async_wrap(func):
@@ -17,3 +18,16 @@ def async_wrap(func):
         pfunc = partial(func, *args, **kwargs)
         return await loop.run_in_executor(executor, pfunc)
     return run
+
+
+_ReturnType = TypeVar('_ReturnType')
+
+
+def run_async(coroutine: Coroutine[Any, Any, _ReturnType]) -> _ReturnType:
+    """
+    Run async in sync.
+
+    :param coroutine: A coroutine.
+    """
+    task = asyncio.create_task(coroutine)
+    return asyncio.ensure_future(task).result()
