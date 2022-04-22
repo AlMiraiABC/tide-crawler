@@ -36,11 +36,17 @@ async def get_ports(request: Request):
     return wrap_response(to_models(ports, to_port_model))
 
 
+def resp404(obj):
+    return web.Response(status=404, reason=f'{obj} doesn\'t exist.')
+
+
 @routes.get('/area/{id}')
 # @alru_cache
 async def get_area(request: Request):
     pid = request.match_info.get('id')
     area = await CacheUtil().get_area(pid, IDT.ID)
+    if area is None:
+        return resp404(f'area: {pid}')
     return wrap_response(to_area_model(area))
 
 
@@ -49,6 +55,8 @@ async def get_area(request: Request):
 async def get_province(request: Request):
     pid = request.match_info.get('id')
     province = await CacheUtil().get_province(pid, IDT.ID)
+    if province is None:
+        return resp404(f'province: {pid}')
     return wrap_response(to_province_model(province))
 
 
@@ -57,6 +65,8 @@ async def get_province(request: Request):
 async def get_port(request: Request):
     pid = request.match_info.get('id')
     port = await CacheUtil().get_port(pid, IDT.ID)
+    if port is None:
+        return resp404(f'port: {pid}')
     return wrap_response(to_port_model(port))
 
 
@@ -74,6 +84,6 @@ async def get_tide(request: Request):
         port = await DbUtil().get_port(port_id, IDT.ID)
         if port is None:
             return web.Response(status=404, reason=f'cannot found port: {port_id}')
-        tide = await CrawlerService().crawl_tide(d,port.rid)
+        tide = await CrawlerService().crawl_tide(d, port.rid)
         await DbUtil().add_tide(tide, IDT.RID)
     return wrap_response(to_tide_model(tide))
