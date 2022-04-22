@@ -3,7 +3,9 @@ from datetime import date
 from aiohttp import web
 from aiohttp.web import Request
 from cache.cache_util import CacheUtil
+from services.crawler_service import CrawlerService
 from storages.basedbutil import IDT
+from storages.dbutil import DbUtil
 
 from web.model import (to_area_model, to_models, to_port_model,
                        to_province_model, to_tide_model, wrap_response)
@@ -65,7 +67,13 @@ async def get_tide(request: Request):
     date_str = request.match_info.get('date')
     try:
         d = date.fromisoformat(date_str)
-        tide = await CacheUtil().get_tide(port_id, d)
-        return wrap_response(to_tide_model(tide))
     except:
         return web.Response(status=400, reason='malformat date, must be iso format: yyyy-MM-dd')
+    tide = await CacheUtil().get_tide(port_id, d)
+    if tide is None:
+        port = await DbUtil().get_port(port_id, IDT.ID)
+        if port is None:
+            return web.Response(status=404, reason=f'cannot found port: {port_id}')
+        tide = await CrawlerService().crawl_tide(d,port.rid)
+        await DbUtil().add_tide(tide, IDT.RID)
+    return wrap_response(to_tide_model(tide))
