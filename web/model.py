@@ -3,7 +3,7 @@ from typing import Callable, List, Tuple, TypedDict
 
 from aiohttp import web
 from aiohttp.web import Response
-from storages.model import Area, Port, Province, Tide, TideItemDict, WithInfo
+from storages.model import Area, Port, Province, Tide, TideItem, TideItemDict, WithInfo
 
 
 class BaseModel(TypedDict):
@@ -25,7 +25,7 @@ class PortModel(BaseModel):
 
 
 class TideModel(TypedDict):
-    date: datetime.date
+    date: str
     day: List[TideItemDict]
     limit: List[TideItemDict]
     datum: float
@@ -68,7 +68,10 @@ def to_port_model(o: Port) -> PortModel:
 def to_tide_model(o: Tide) -> TideModel:
     if not o:
         return None
-    return TideModel(date=o.date, day=o.day, limit=o.limit, datum=o.datum)
+
+    def items_to_dicts(items: List[TideItem]) -> List[TideItemDict]:
+        return [i.to_dict() for i in items]
+    return TideModel(date=o.date.date().isoformat(), day=items_to_dicts(o.day), limit=items_to_dicts(o.limit), datum=o.datum)
 
 
 def to_models(os: list, to: Callable[[WithInfo], BaseModel]):
