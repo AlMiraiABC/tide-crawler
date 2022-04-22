@@ -10,7 +10,7 @@ from utils.meta import merge_meta
 from utils.singleton import Singleton
 from utils.validate import Value
 
-from cache.cache import alru_cache
+from utils.alru import alru_cache
 from cache.cache_db import CacheDB
 
 _ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
