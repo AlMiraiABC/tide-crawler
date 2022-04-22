@@ -259,7 +259,7 @@ class LCUtil(BaseDbUtil):
     @_login()
     async def get_area(self, area_id: str, col: IDT) -> Optional[LCArea]:
         try:
-            return await self.__get_by_id(area_id, col, LCArea)[1]
+            return (await self.__get_by_id(area_id, col, LCArea))[1]
         except Exception as ex:
             self.logger.error(f"get area {area_id} failed. {ex}",
                               exc_info=True, stack_info=True)
@@ -268,7 +268,7 @@ class LCUtil(BaseDbUtil):
     @_login()
     async def get_province(self, province_id: str, col: IDT) -> Optional[LCProvince]:
         try:
-            return await self.__get_by_id(province_id, col, LCProvince)[1]
+            return (await self.__get_by_id(province_id, col, LCProvince))[1]
         except Exception as ex:
             self.logger.error(f"get province {province_id} failed. {ex}",
                               exc_info=True, stack_info=True)
@@ -277,7 +277,7 @@ class LCUtil(BaseDbUtil):
     @_login()
     async def get_port(self, port_id: str, col: IDT) -> Optional[LCPort]:
         try:
-            return await self.__get_by_id(port_id, col, LCPort)[1]
+            return (await self.__get_by_id(port_id, col, LCPort))[1]
         except Exception as ex:
             self.logger.error(f"get port {port_id} failed. {ex}",
                               exc_info=True, stack_info=True)
