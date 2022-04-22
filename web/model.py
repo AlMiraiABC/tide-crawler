@@ -56,7 +56,9 @@ def to_province_model(o: Province) -> ProvinceModel:
 
 
 def to_port_model(o: Port) -> PortModel:
-    return to_base_model(o).update({'zone': o.zone, 'geopoint': o.geopoint})
+    m = to_base_model(o)
+    m.update({'zone': o.zone, 'geopoint': o.geopoint})
+    return m
 
 
 def to_tide_model(o: Tide) -> TideModel:

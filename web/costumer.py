@@ -30,7 +30,7 @@ async def get_provinces(request: Request):
 # @alru_cache
 async def get_ports(request: Request):
     province_id = request.match_info.get('province')
-    ports = await CacheUtil().get_provinces(province_id, IDT.ID)
+    ports = await CacheUtil().get_ports(province_id, IDT.ID)
     return wrap_response(to_models(ports, to_port_model))
 
 
