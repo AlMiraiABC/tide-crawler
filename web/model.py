@@ -44,6 +44,8 @@ def wrap_response(data={}, code=0, msg='success', err='') -> Response:
 
 
 def to_base_model(o: WithInfo) -> BaseModel:
+    if not o:
+        return None
     return BaseModel(id=o.objectId, name=o.name)
 
 
@@ -56,12 +58,16 @@ def to_province_model(o: Province) -> ProvinceModel:
 
 
 def to_port_model(o: Port) -> PortModel:
+    if not o:
+        return None
     m = to_base_model(o)
     m.update({'zone': o.zone, 'geopoint': o.geopoint})
     return m
 
 
 def to_tide_model(o: Tide) -> TideModel:
+    if not o:
+        return None
     return TideModel(date=o.date, day=o.day, limit=o.limit, datum=o.datum)
 
 
