@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any, List, Optional, Tuple, TypeVar, Union
+from typing import Any, List, Optional, Tuple, Type, TypeVar, Union
 
 from services.crawler_service import CrawlerService
 from storages.basedbutil import IDT, BaseDbUtil, switch_idt
@@ -9,9 +9,10 @@ from storages.model import Area, Port, Province, Tide, WithInfo
 from utils.meta import merge_meta
 from utils.singleton import Singleton
 from utils.validate import Value
+from config import CACHE, Caches
 
 from utils.alru import alru_cache
-from cache.cache_db import CacheDB
+from cache.dict_db import DictDb
 
 _ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
 
@@ -20,9 +21,16 @@ EXECSTATE_SUCCESS = [ExecState.CREATE, ExecState.SUCCESS, ExecState.UPDATE]
 
 
 class CacheUtil(merge_meta(BaseDbUtil, Singleton)):
+
+    def __new__(cls: Type[DbUtil]) -> DbUtil:
+        if CACHE == Caches.STORAGE:
+            return DbUtil()
+        return super().__new__(cls)
+
     def __init__(self) -> None:
         super().__init__()
-        self.cache = CacheDB()
+        if CACHE == Caches.NMDIS:
+            self.cache = DictDb()
 
     async def open(self):
         await super().open()

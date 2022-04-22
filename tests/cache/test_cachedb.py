@@ -5,7 +5,7 @@ from storages.basedbutil import IDT
 from tests.cache.mock_dbutil import MockBaseClazz, MockDbUtil, load_mock_data
 from tests.storages.leancloud.test_lc_util import random_str
 
-from cache.cache_db import _PRE_ID, BaseClazzEncoder, CacheDB
+from cache.dict_db import _PRE_ID, BaseClazzEncoder, DictDb
 
 
 class TestBaseClazzEncoder(TestCase):
@@ -29,7 +29,7 @@ class TestCacheDB(IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.dbutil = MockDbUtil()
-        cls.cachedb = CacheDB(db_util=cls.dbutil)
+        cls.cachedb = DictDb(db_util=cls.dbutil)
 
     async def test_refresh(self):
         data = load_mock_data()

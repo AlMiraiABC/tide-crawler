@@ -17,9 +17,19 @@ class Crawlers(Enum):
     NMDIS = auto()  # http://mds.nmdis.org.cn/pages/tidalCurrent.html
 
 
+class Caches(Enum):
+    """Cache"""
+    DICT = auto()
+    # TINYDB = auto()
+    # SQLITE = auto()
+    STORAGE = auto()  # using storage directly without cache.
+
+
 STORAGE: Storages = Storages.LEAN_CLOUD
 
 CRAWLER: Crawlers = Crawlers.NMDIS
+
+CACHE: Caches = Caches.STORAGE
 
 
 class LCSetting:
@@ -75,7 +85,7 @@ class Headers:
     CXB = {
 
     }
-    NMDIS={
+    NMDIS = {
 
     }
 

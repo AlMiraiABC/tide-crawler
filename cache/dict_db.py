@@ -1,5 +1,3 @@
-import asyncio
-import json
 from json import JSONEncoder
 from typing import Dict, List, Optional
 
@@ -58,10 +56,9 @@ _PRE_ID = 'ID'
 _PRE_RID = 'RID'
 
 
-class CacheDB(Singleton):
+class DictDb(Singleton):
     """Cache storage for db module."""
 
-    # HACK: Consider using third-part local database, such as sqlite3
     def __init__(self, db_util: BaseDbUtil = None, *args, **kwargs) -> None:
         """
         :param db_util: Inner db util for :class:`DbUtil`
