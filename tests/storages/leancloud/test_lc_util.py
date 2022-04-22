@@ -8,7 +8,7 @@ from config import LCSetting
 from storages.basedbutil import IDT
 from storages.common import ExecState
 from storages.leancloud.lc_model import (LCArea, LCBaseClazz, LCPort, LCProvince,
-                                   LCTide, LCWithInfo)
+                                         LCTide, LCWithInfo)
 from storages.leancloud.lc_util import LCUtil
 from storages.model import TideItem
 
@@ -288,6 +288,10 @@ class TestLCUtilGet(TestCase):
         self._assert_with_info(area, a)
         delete(area)
 
+    async def test_get_area_unexist(self):
+        a = await self.lc.get_area('unexistarea', IDT.ID)
+        self.assertIsNone(a)
+
     async def test_get_province_id(self):
         area = add_area()
         province = add_province(area)
@@ -295,6 +299,10 @@ class TestLCUtilGet(TestCase):
         self._assert_with_info(province, p)
         self._assert_with_info(area, p.area)
         delete(province, area)
+
+    async def test_get_province_unexist(self):
+        p = await self.lc.get_province('unexistprovince', IDT.ID)
+        self.assertIsNone(p)
 
     async def test_get_province_rid(self):
         area = add_area()
@@ -322,6 +330,10 @@ class TestLCUtilGet(TestCase):
         self._assert_with_info(province, p.province)
         delete(port, province, area)
 
+    async def test_get_port_unexist(self):
+        p = await self.lc.get_port('unexistport', IDT.ID)
+        self.assertIsNone(p)
+
     async def test_get_tide(self):
         area = add_area()
         province = add_province(area)
@@ -331,6 +343,10 @@ class TestLCUtilGet(TestCase):
         self.assertIsNotNone(t)  # may return earlier or later row
         self.assertEquals(t.port.objectId, port.objectId)
         delete(tide, port, province, area)
+
+    async def test_get_tide_unexist(self):
+        t = await self.lc.get_tide('unexistport', datetime.datetime.now().date())
+        self.assertIsNone(t)
 
 
 class TestLCUtilGetList(TestCase):
@@ -386,6 +402,10 @@ class TestLCUtilGetList(TestCase):
                             self._id_sets(provinces2))
         delete(*provinces1, area)
 
+    async def test_get_provinces_unexist(self):
+        provinces = await self.lc.get_provinces('unexistarea', IDT.ID)
+        self.assertListEqual(provinces, [])
+
     async def test_get_ports_province(self):
         """get ports by Province instance"""
         area = add_area()
@@ -410,3 +430,7 @@ class TestLCUtilGetList(TestCase):
         ports2 = await self.lc.get_ports(province.rid, IDT.RID)
         self.assertSetEqual(self._id_sets(ports1), self._id_sets(ports2))
         delete(*ports1, province, area)
+
+    async def test_get_ports_unexist(self):
+        ports = await self.lc.get_ports('unexistprovince', IDT.ID)
+        self.assertListEqual(ports, [])
