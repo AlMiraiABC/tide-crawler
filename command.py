@@ -8,6 +8,6 @@ if __name__ == '__main__':
         print('crawl\t\tCrawl and update database.')
     cmd = sys.argv[1]
     if cmd == 'init':
-        init_user(sys.argv[1:])
+        init_user(sys.argv[2:])
     if cmd == 'crawl':
-        crawl(sys.argv[1:])
+        crawl(sys.argv[2:])
