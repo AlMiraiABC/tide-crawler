@@ -8,7 +8,7 @@ from config import LCSetting
 from storages.basedbutil import IDT, BaseDbUtil, switch_idt
 from storages.common import ExecState
 from storages.leancloud.lc_model import (LCArea, LCPort, LCProvince, LCTide,
-                                   LCWithInfo)
+                                         LCWithInfo)
 from storages.model import Area, Port, Province, Tide, WithInfo
 from utils.async_util import async_wrap
 from utils.logger import Logger
@@ -124,9 +124,13 @@ class LCUtil(BaseDbUtil):
             rid_query) else lambda: q.equal_to(clazz.RID, objid).first()
 
         def id_cb():
-            return (ExecState.UN_EXIST, None) \
-                if Value.is_any_none_or_whitespace(objid) \
-                else (ExecState.EXIST, q.get(objid))
+            if Value.is_any_none_or_whitespace(objid):
+                return ExecState.UN_EXIST, None
+            o = q.get(objid)
+            if o.is_existed():
+                return ExecState.EXIST, o
+            return ExecState.UN_EXIST, None
+
         try:
             # HACK consider using `clazz.create_without_data`` instead of `q.get``
             return switch_idt(col, id_cb, lambda: (ExecState.EXIST, rid_query()))
