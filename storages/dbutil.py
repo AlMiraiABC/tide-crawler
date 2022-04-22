@@ -35,7 +35,7 @@ class DbUtil(merge_meta(BaseDbUtil, Singleton)):
     async def close(self):
         return await self.db_util.close()
 
-    async def __valid_none(self, o: Any, name: str):
+    def __valid_none(self, o: Any, name: str):
         if o is None:
             raise ValueError(f"{name} cannot be null")
 
@@ -84,7 +84,7 @@ class DbUtil(merge_meta(BaseDbUtil, Singleton)):
     async def get_tide(self, port_id: str, d: date) -> Optional[Tide]:
         if Value.is_any_none_or_whitespace(port_id):
             raise ValueError("port_id cannot be null or empty.")
-        if d == None or d < date(2000, 0, 0):
+        if d == None or d < date(2000, 1, 1):
             d = date.today()
         return await self.db_util.get_tide(port_id, d)
 
