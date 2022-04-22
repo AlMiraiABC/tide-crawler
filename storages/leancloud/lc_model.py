@@ -117,7 +117,7 @@ class LCPort(LCWithInfo, Port):
     @property
     def geopoint(self) -> Tuple[float, float]:
         gp: GeoPoint = self.get(LCPort.GEOPOINT)
-        return gp.latitude, gp.longitude
+        return (gp.latitude, gp.longitude) if gp else None
 
     @geopoint.setter
     def geopoint(self, value: Tuple[float, float]):
