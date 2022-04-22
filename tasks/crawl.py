@@ -7,7 +7,8 @@ from services.crawler_service import CrawlerService
 from storages.basedbutil import IDT
 from storages.common import ExecState
 from storages.dbutil import DbUtil
-from storages.model import Tide, WithInfo
+from storages.model import Area, Port, Province, Tide, WithInfo
+from utils.console import Console
 from utils.logger import Logger
 
 _T = TypeVar('_T', bound=WithInfo)
@@ -52,6 +53,43 @@ async def crawl_tide(d: date, port: str):
     return (ret, obj)
 
 
+async def crawl_init():
+    areas = []
+    provinces = []
+    ports = []
+    areas = await crawl_areas()
+    err_a = []
+    err_p = []
+    err_po = []
+    for aret, area in areas:
+        if isinstance(area, Area):
+            provinces = await crawl_provinces(area.rid)
+            for pret, province in provinces:
+                if isinstance(province, Province):
+                    ports = await crawl_ports(province.rid)
+                    for poret, port in ports:
+                        if not isinstance(port, Port):
+                            err_po.area((poret, port))
+                else:
+                    err_p.append((pret, province))
+        else:
+            err_a.append((aret, area))
+
+    def p(rets):
+        for r, obj in rets:
+            Console.print_warn(f'{r.name} {obj}')
+    if err_a:
+        Console.print_err(f'occured erros when get areas')
+        p(err_a)
+    if err_p:
+        Console.print_err(f'occured erros when get provinces')
+        p(err_p)
+    if err_po:
+        Console.print_err(f'occured erros when get ports')
+        p(err_po)
+    return (areas, err_a), (provinces, err_p), (ports, err_po)
+
+
 def main(args: List[str]):
     HELP = 'area\nprovince area_rid\nport province_rid\ntide yyyy-MM-dd port_rid'
     if not args:
@@ -83,6 +121,15 @@ def main(args: List[str]):
             print(HELP)
             return
         return loop.run_until_complete(crawl_tide(d, args[2]))
+    if op == 'init':
+        Console.print_warn(
+            "WARNING: This will crawl all areas, provinces and ports. It may blocked your IP.")
+        confirm = input('Enter y/Y to continue: ')
+        if confirm.upper() in ['Y', 'YES']:
+            return loop.run_until_complete(crawl_init())
+        else:
+            print('Canceled.')
+            return
     print(HELP)
 
 
