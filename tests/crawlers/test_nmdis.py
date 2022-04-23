@@ -86,9 +86,9 @@ class TestNmdisAsync(IsolatedAsyncioTestCase):
         self.mock_client(get, json=lambda: mock_data,
                          text=lambda: json.dumps(mock_data))
         areas = await self.nmdis.get_areas()
-        self.assertEquals(len(areas), 1)
-        self.assertEquals(areas[0].rid, RID)
-        self.assertEquals(areas[0].name, NAME)
+        self.assertEqual(len(areas), 1)
+        self.assertEqual(areas[0].rid, RID)
+        self.assertEqual(areas[0].name, NAME)
 
     @patch(GET_MODEL)
     async def test_get_provinces(self, get):
@@ -120,10 +120,10 @@ class TestNmdisAsync(IsolatedAsyncioTestCase):
         self.mock_client(get, json=lambda: mock_data,
                          text=lambda: json.dumps(mock_data))
         provinces = await self.nmdis.get_provinces(ARID)
-        self.assertEquals(len(provinces), 1)
-        self.assertEquals(provinces[0].rid, RID)
-        self.assertEquals(provinces[0].name, NAME)
-        self.assertEquals(provinces[0].area.rid, ARID)
+        self.assertEqual(len(provinces), 1)
+        self.assertEqual(provinces[0].rid, RID)
+        self.assertEqual(provinces[0].name, NAME)
+        self.assertEqual(provinces[0].area.rid, ARID)
 
     @patch(GET_MODEL)
     async def test_get_provinces_no_data(self, get):
@@ -173,11 +173,11 @@ class TestNmdisAsync(IsolatedAsyncioTestCase):
         self.mock_client(get, json=lambda: mock_data,
                          text=lambda: json.dumps(mock_data))
         ports = await self.nmdis.get_ports(PRID)
-        self.assertEquals(len(ports), 1)
-        self.assertEquals(ports[0].rid, RID)
-        self.assertEquals(ports[0].name, NAME)
-        self.assertEquals(ports[0].province.rid, PRID)
-        self.assertEquals(ports[0].geopoint, GEO)
+        self.assertEqual(len(ports), 1)
+        self.assertEqual(ports[0].rid, RID)
+        self.assertEqual(ports[0].name, NAME)
+        self.assertEqual(ports[0].province.rid, PRID)
+        self.assertEqual(ports[0].geopoint, GEO)
 
     @patch(GET_MODEL)
     async def test_get_ports_no_data(self, get):
@@ -269,10 +269,10 @@ class TestNmdisAsync(IsolatedAsyncioTestCase):
         self.mock_client(get, json=lambda: mock_data,
                          text=lambda: json.dumps(mock_data))
         tide = await self.nmdis.get_tide(PRID, DATE)
-        self.assertEquals(tide.datum, DATUM)
-        self.assertEquals(tide.port.rid, PRID)
-        self.assertEquals(len(tide.day), 24)
-        self.assertEquals(len(tide.limit), 2)
+        self.assertEqual(tide.datum, DATUM)
+        self.assertEqual(tide.port.rid, PRID)
+        self.assertEqual(len(tide.day), 24)
+        self.assertEqual(len(tide.limit), 2)
 
     @patch(GET_MODEL)
     async def test_get_tide_no_data(self, get):

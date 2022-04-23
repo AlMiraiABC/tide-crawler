@@ -118,7 +118,7 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
 
         area = add_area(False)
         (ret, inserted) = await self.lc.try_insert(area, IDT.RID, save, LCArea)
-        self.assertEquals(ret, ExecState.CREATE)
+        self.assertEqual(ret, ExecState.CREATE)
         self.assertTrue(inserted.is_existed())
         delete(inserted)
 
@@ -137,16 +137,16 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         arean.name = random_str()
         arean.raw = random_str()
         (ret, updated) = await self.lc.try_insert(arean, IDT.RID, save, LCArea)
-        self.assertEquals(ret, ExecState.UPDATE)
-        self.assertEquals(updated.objectId, area.objectId)
-        self.assertEquals(updated.name, arean.name)
+        self.assertEqual(ret, ExecState.UPDATE)
+        self.assertEqual(updated.objectId, area.objectId)
+        self.assertEqual(updated.name, arean.name)
         delete(updated)
 
     async def test_add_area_id_unexist(self):
         """add_area compared by id and unexist so create it."""
         area = add_area(False)
         (ret, _) = await self.lc.add_area(area, IDT.ID)
-        self.assertEquals(ret, ExecState.CREATE)
+        self.assertEqual(ret, ExecState.CREATE)
         delete(area)
 
     async def test_add_area_id_exist(self):
@@ -156,16 +156,16 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         area.name = random_str()
         area.rid = random_str()
         (ret, updated) = await self.lc.add_area(area, IDT.ID)
-        self.assertEquals(ret, ExecState.UPDATE)
-        self.assertEquals(updated.name, area.name)
+        self.assertEqual(ret, ExecState.UPDATE)
+        self.assertEqual(updated.name, area.name)
         delete(updated)
 
     async def test_add_area_rid_unexist(self):
         """add_area compared by rid and unexist so create it."""
         area = add_area(False)
         (ret, inserted) = await self.lc.add_area(area, IDT.RID)
-        self.assertEquals(ret, ExecState.CREATE)
-        self.assertEquals(inserted.rid, area.rid)
+        self.assertEqual(ret, ExecState.CREATE)
+        self.assertEqual(inserted.rid, area.rid)
         delete(inserted)
 
     async def test_add_area_rid_exist(self):
@@ -176,8 +176,8 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         arean.name = random_str()
         arean.rid = area.rid
         (ret, updated) = await self.lc.add_area(arean, IDT.RID)
-        self.assertEquals(ret, ExecState.UPDATE)
-        self.assertEquals(updated.name, arean.name)
+        self.assertEqual(ret, ExecState.UPDATE)
+        self.assertEqual(updated.name, arean.name)
         delete(updated)
 
     async def test_add_province_area_exist(self):
@@ -185,8 +185,8 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         area = add_area()
         province = add_province(area, False)
         (ret, inserted) = await self.lc.add_province(province, IDT.ID)
-        self.assertEquals(ret, ExecState.CREATE)
-        self.assertEquals(inserted.area.objectId, area.objectId)
+        self.assertEqual(ret, ExecState.CREATE)
+        self.assertEqual(inserted.area.objectId, area.objectId)
         delete(inserted, area)
 
     async def test_add_province_area_unexist(self):
@@ -208,8 +208,8 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         a.rid = area.rid
         province = add_province(a, False)
         (ret, inserted) = await self.lc.add_province(province, IDT.RID)
-        self.assertEquals(ret, ExecState.CREATE)
-        self.assertEquals(inserted.area.objectId, area.objectId)
+        self.assertEqual(ret, ExecState.CREATE)
+        self.assertEqual(inserted.area.objectId, area.objectId)
         delete(inserted, area)
 
     async def test_add_tide_get_set_tideitem(self):
@@ -221,7 +221,7 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
         port = add_port(province)
         (tide, day, limit) = add_tide(port, save=False)
         (ret, inserted) = await self.lc.add_tide(tide, IDT.ID)
-        self.assertEquals(ret, ExecState.CREATE)
+        self.assertEqual(ret, ExecState.CREATE)
         self.assertListEqual(convert(day), convert(inserted.day))
         self.assertListEqual(convert(limit), convert(inserted.limit))
         delete(inserted, port, province, area)
@@ -246,8 +246,8 @@ class TestTideItem(TestCase):
         height = random.random()*10
         ti = TideItem.from_dict(
             {TideItem.TIME: str(time), TideItem.HEIGHT: height})
-        self.assertEquals(ti.time, time)
-        self.assertEquals(ti.height, height)
+        self.assertEqual(ti.time, time)
+        self.assertEqual(ti.height, height)
 
     def test_from_dict_value_none(self):
         """dict values are none"""
@@ -271,13 +271,13 @@ class TestLCUtilGet(IsolatedAsyncioTestCase):
         return super().tearDownClass()
 
     def _assert_base(self, a: LCBaseClazz, b: LCBaseClazz):
-        self.assertEquals(a.objectId, b.objectId)
-        self.assertEquals(a.raw, b.raw)
+        self.assertEqual(a.objectId, b.objectId)
+        self.assertEqual(a.raw, b.raw)
 
     def _assert_with_info(self, a: LCWithInfo, b: LCWithInfo):
         self._assert_base(a, b)
-        self.assertEquals(a.rid, b.rid)
-        self.assertEquals(a.name, b.name)
+        self.assertEqual(a.rid, b.rid)
+        self.assertEqual(a.name, b.name)
 
     async def test_get_area_id(self):
         area = add_area()
@@ -344,7 +344,7 @@ class TestLCUtilGet(IsolatedAsyncioTestCase):
         (tide, _, _) = add_tide(port)
         t = await self.lc.get_tide(port.objectId, tide.date.date())
         self.assertIsNotNone(t)  # may return earlier or later row
-        self.assertEquals(t.port.objectId, port.objectId)
+        self.assertEqual(t.port.objectId, port.objectId)
         delete(tide, port, province, area)
 
     async def test_get_tide_unexist(self):
