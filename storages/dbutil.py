@@ -1,7 +1,6 @@
 from datetime import date
 from typing import Any, List, Optional, Tuple, Union
 
-from config import STORAGE, Storages
 from utils.meta import merge_meta
 from utils.singleton import Singleton
 from utils.validate import Value
@@ -10,7 +9,6 @@ from storages.basedbutil import IDT, BaseDbUtil
 from storages.common import ExecState
 from storages.leancloud.lc_util import LCUtil
 from storages.model import Area, Port, Province, Tide
-from storages.rdb.rdb_util import RDBUtil
 
 
 class DbUtil(merge_meta(BaseDbUtil, Singleton)):
@@ -22,12 +20,7 @@ class DbUtil(merge_meta(BaseDbUtil, Singleton)):
         if db_util:
             self.db_util = db_util
         else:
-            if STORAGE == Storages.LEAN_CLOUD:
-                self.db_util = LCUtil()
-            elif STORAGE == Storages.RDB:
-                self.db_util = RDBUtil()
-            else:
-                raise ValueError(f"STORAGE {STORAGE} not support")
+            self.db_util = LCUtil()
 
     async def open(self):
         return await self.db_util.open()

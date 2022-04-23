@@ -12,7 +12,6 @@ from utils.validate import Value
 from config import CACHE, Caches
 
 from utils.alru import alru_cache
-from cache.dict_db import DictDb
 
 _ClazzWithInfo = TypeVar('_ClazzWithInfo', bound=WithInfo)
 

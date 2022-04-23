@@ -1,35 +1,6 @@
 import logging
 import os
-from enum import Enum, auto
 from typing import Optional
-
-
-class Storages(Enum):
-    """Data storage, where to save data"""
-    LEAN_CLOUD = auto()  # leancloud storage https://www.leancloud.cn/storage/
-    RDB = auto()  # Relational Database
-
-
-class Crawlers(Enum):
-    """Data source, where data come from"""
-    # CXB = auto()  # https://www.chaoxibiao.net/
-    # CNSS = auto()  # https://www.cnss.com.cn/tide/
-    NMDIS = auto()  # http://mds.nmdis.org.cn/pages/tidalCurrent.html
-
-
-class Caches(Enum):
-    """Cache"""
-    DICT = auto()
-    # TINYDB = auto()
-    # SQLITE = auto()
-    STORAGE = auto()  # using storage directly without cache.
-
-
-STORAGE: Storages = Storages.LEAN_CLOUD
-
-CRAWLER: Crawlers = Crawlers.NMDIS
-
-CACHE: Caches = Caches.STORAGE
 
 
 class LCSetting:
@@ -50,41 +21,10 @@ class LCSetting:
     DEBUG_LEVEL = logging.DEBUG
 
 
-class RDBSetting:
-    """
-    settings to connect relational database
-
-    See also
-    ------
-    * https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls
-    * https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.Engine
-    """
-    DIALECT: str = 'mysql'
-    DRIVER: Optional[str] = 'pymysql'
-    HOST: str = 'db.nmtsoft.net'
-    PORT: Optional[int] = 3306
-    USERNAME: str = 'tide_root'
-    PASSWORD: str = 'os)3zaaK4Z_rq?}_'
-    DATABASE: str = 'tide'
-    KWARGS = {}  # https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.Engine
-
-
 class Headers:
     """
     headers for crawler
     """
-    # get data from [海事服务网](https://www.cnss.com.cn/tide/)
-    CNSS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/80.0.3987.163 Safari/537.36 ',
-        'X-Requested-With': 'XMLHttpRequest',
-        'Referer': 'https://www.cnss.com.cn/tide/',
-        'Accept': 'application/json, text/javascript, */*; q=0.01'
-    }
-    # get data from [大鱼潮汐表](https://www.chaoxibiao.net/)
-    CXB = {
-
-    }
     NMDIS = {
 
     }

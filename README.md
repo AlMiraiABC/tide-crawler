@@ -2,29 +2,16 @@
 
 Tide crawler is used to get tide data.
 
-## Data source
-
-It is designed to support multiple data source: [nmdis](http://mds.nmdis.org.cn/pages/tidalCurrent.html), [cxb](https://www.chaoxibiao.net/), [cnss](https://www.cnss.com.cn/tide/), ...
-
-Set `CRAWLER` to determine which data source should be in use.
-
-## Data storage
-
-It is designed to support multiple data storage: mysql, [leancloud](https://www.leancloud.cn/), redis, ...
-
-Set `STORAGE` to determine which data storage should be in use.
-
 ## Prerequisites
 
-### Storage in RDB
-
-Create database and tables. The user must have read, write, update, delete privileges.
-
-### Storage in LeanCloud
+### LeanCloud
 
 Please create classes and a User. The user must have read, write, update, delete privileges.
 
-Create classes with columns as blow.
+Create classes with columns as blow or import from [./storages/leancloud/schemas](./storages/leancloud/schemas/).
+
+**NOTE**
+Please set all permissions and default ALC to all users. We'll fix this in next version.
 
 * Area
 
@@ -85,39 +72,6 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 
 ## Docker
 
-Commingle soon.
-
-## Develop
-
-### Project structure
-
-```sh
-|- `.devcontainer`  # configurations to develop in docker container used for vscode.
-|- `crawler` # crawlers to get data from third-part
-|- `db` # databases management(DAO)
-|- `log` # default logs save directory.
-|- `service` # unified `crawler` and `db` to provide services for `app`.
-|- `utils`
-|- `app.py` # start up application
-|- `config.py` # configuration
-|- `logging.yaml` # logger configuration
+```bash
+docker build .
 ```
-
-### Terminology
-
-name|alias|description
--|-|-
-id|objectId|Object's id for users stored in project database.
-rid||Origin id for crawlers stored in third-part.
-
-### Storage
-
-All storage management(util) should implements `BaseDbUtil`
-
-Using `DbUtil` to provide a unified operations.
-
-### Crawler
-
-### Service
-
-All services should implements `BaseCrawlerService`
