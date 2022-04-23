@@ -28,8 +28,7 @@ class CacheUtil(merge_meta(BaseDbUtil, Singleton)):
 
     def __init__(self) -> None:
         super().__init__()
-        if CACHE == Caches.NMDIS:
-            self.cache = DictDb()
+        self.cache = None
 
     async def open(self):
         await super().open()
