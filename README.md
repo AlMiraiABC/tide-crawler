@@ -1,5 +1,8 @@
 # Tide Crawler
 
+[![CircleCI](https://circleci.com/gh/AlMiraiABC/tide-crawler/tree/master.svg?style=svg)](https://circleci.com/gh/AlMiraiABC/tide-crawler/tree/master)
+[![codecov](https://codecov.io/gh/AlMiraiABC/tide-crawler/branch/master/graph/badge.svg?token=4VQ4UFFBH8)](https://codecov.io/gh/AlMiraiABC/tide-crawler)
+
 Tide crawler is used to get tide data.
 
 ## Prerequisites
