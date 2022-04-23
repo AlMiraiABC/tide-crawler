@@ -29,5 +29,11 @@ def run_async(coroutine: Coroutine[Any, Any, _ReturnType]) -> _ReturnType:
 
     :param coroutine: A coroutine.
     """
-    task = asyncio.create_task(coroutine)
-    return asyncio.ensure_future(task).result()
+    try:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coroutine)
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(coroutine)

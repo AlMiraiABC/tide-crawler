@@ -14,6 +14,9 @@ from storages.model import TideItem
 
 import leancloud
 
+from utils.async_util import run_async
+
+
 leancloud.init(LCSetting.APP_ID,
                LCSetting.APP_KEY if LCSetting.APP_KEY else LCSetting.MASTER_KEY)
 leancloud.User().login(LCSetting.USERNAME, LCSetting.PASSWORD)
@@ -100,7 +103,7 @@ class TestLCUtilAdd(IsolatedAsyncioTestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        asyncio.ensure_future(cls.lc.logout())
+        run_async(cls.lc.logout())
         return super().tearDownClass()
 
     async def test_try_insert(self):
@@ -253,7 +256,7 @@ class TestTideItem(TestCase):
         self.assertIsNone(ti.height)
 
 
-class TestLCUtilGet(TestCase):
+class TestLCUtilGet(IsolatedAsyncioTestCase):
     """LCUtil.get_* which return one object."""
     lc: LCUtil = None
 
@@ -264,7 +267,7 @@ class TestLCUtilGet(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        asyncio.ensure_future(cls.lc.logout())
+        run_async(cls.lc.logout())
         return super().tearDownClass()
 
     def _assert_base(self, a: LCBaseClazz, b: LCBaseClazz):
@@ -349,7 +352,7 @@ class TestLCUtilGet(TestCase):
         self.assertIsNone(t)
 
 
-class TestLCUtilGetList(TestCase):
+class TestLCUtilGetList(IsolatedAsyncioTestCase):
     """LCUtil.get_* which return a list."""
     lc: LCUtil = None
 
