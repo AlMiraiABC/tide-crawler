@@ -176,7 +176,7 @@ class TestNmdisAsync(IsolatedAsyncioTestCase):
         self.assertEquals(len(ports), 1)
         self.assertEquals(ports[0].rid, RID)
         self.assertEquals(ports[0].name, NAME)
-        self.assertEquals(ports[0].province.rid, RID)
+        self.assertEquals(ports[0].province.rid, PRID)
         self.assertEquals(ports[0].geopoint, GEO)
 
     @patch(GET_MODEL)
