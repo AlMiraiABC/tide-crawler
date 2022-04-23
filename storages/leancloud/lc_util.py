@@ -105,6 +105,8 @@ class LCUtil(BaseDbUtil):
     @_login()
     async def __get(self, obj: _ObjClazz, col: IDT, clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None):
         """Wrapper for :fun:`__get_by_id` to get `objid` from :param:`obj`"""
+        if obj is None:
+            return ExecState.UN_EXIST, None
         return await self.__get_by_id(switch_idt(col, obj.objectId, obj.rid), col, clazz, rid_query)
 
     @_login()
