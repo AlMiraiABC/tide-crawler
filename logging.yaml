@@ -1,0 +1,54 @@
+# https://docs.python.org/zh-cn/3/howto/logging.html
+# https://docs.python.org/zh-cn/3/library/logging.config.htm
+version: 1
+disable_existing_loggers: False
+formatters:
+  info: # debug info
+    format: "%(asctime)s[%(levelname)s]%(pathname)s:%(funcName)s:%(message)s"
+  error: # warning error critical
+    format: "%(asctime)s[%(levelname)s]%(pathname)s:%(funcName)s:%(lineno)d:%(process)d-%(thread)d:%(message)s"
+filters:
+  cinfo:
+    (): "utils.filter.RangeLevelFilter"
+    level: [10, 20]
+  info:
+    (): "utils.filter.RangeLevelFilter"
+    level: [20]
+  error:
+    (): "utils.filter.RangeLevelFilter"
+    level: [30, 40, 50]
+handlers:
+  console-info:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: info
+    stream: ext://sys.stdout
+    filters: [cinfo]
+  console-error:
+    class: logging.StreamHandler
+    level: WARNING
+    formatter: error
+    stream: ext://sys.stderr
+    filters: [error]
+  info_file_handler:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: info
+    filename: ./logs/info/info.log # create log folder `log/info` manually
+    when: W0
+    backupCount: 14
+    encoding: utf8
+    filters: [info]
+  error_file_handler:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: WARNING
+    formatter: error
+    filename: ./logs/error/error.log # create log folder `log/error` manually
+    when: W0
+    backupCount: 14
+    encoding: utf8
+    filters: [error]
+# loggers:
+root:
+  level: DEBUG
+  handlers: [console-info, console-error, info_file_handler, error_file_handler]
