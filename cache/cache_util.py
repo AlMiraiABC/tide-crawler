@@ -9,7 +9,6 @@ from storages.model import Area, Port, Province, Tide, WithInfo
 from utils.meta import merge_meta
 from utils.singleton import Singleton
 from utils.validate import Value
-from config import CACHE, Caches
 
 from utils.alru import alru_cache
 
@@ -22,9 +21,7 @@ EXECSTATE_SUCCESS = [ExecState.CREATE, ExecState.SUCCESS, ExecState.UPDATE]
 class CacheUtil(merge_meta(BaseDbUtil, Singleton)):
 
     def __new__(cls: Type[DbUtil]) -> DbUtil:
-        if CACHE == Caches.STORAGE:
-            return DbUtil()
-        return super().__new__(cls)
+        return DbUtil()
 
     def __init__(self) -> None:
         super().__init__()
