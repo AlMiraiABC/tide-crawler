@@ -45,9 +45,13 @@ class TestLogger(TestCase):
         self.assertEqual(logs.output, [self.__log_msg('ERROR', message)])
 
     def test__package_name_linux(self):
-        p = _package_name('/TideCrawler/a/b/c.py')
+        p = _package_name('/TideCrawler/a/b/c.py', 'TideCrawler')
         self.assertEqual(p, 'a.b.c')
 
     def test__package_name_win(self):
-        p = _package_name('\\TideCrawler\\a\\b\\c.py')
+        p = _package_name('\\TideCrawler\\a\\b\\c.py', 'TideCrawler')
         self.assertEqual(p, 'a.b.c')
+
+    def test__package_name_otherprojectname(self):
+        p = _package_name('/abc/def', 'cba')
+        self.assertEqual(p, 'cba.default')

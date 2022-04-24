@@ -1,24 +1,30 @@
 import logging
 import logging.config
+import os
 import sys
 
 import yaml
 from config import LoggerSetting
 
 
-def _package_name(path: str, project_name: str = 'TideCrawler') -> str:
+def _package_name(path: str, project_name: str = None) -> str:
     """
     get package name
 
-    :param path: path from :param:``project_name`` to file, must incude :param:``project_name``. such as: ``TideCrawler/a/b/c.py``. get file path from ``sys._getframe(1).f_code.co_filename``
-    :param project_name: project_name.
-    :return: package_name.file_name_without_ext
+    :param path:
+        Path from :param:``project_name`` to file.
+        Should contain :param:``project_name`` at first, such as: ``<project_name>/a/b/c.py``.
+        Get file path from ``sys._getframe(1).f_code.co_filename``
+    :param project_name: project_name. Current project folder name by default.
+    :return: package_name.file_name_without_ext. If :param:`path` not contain :param:`project_name`, it return `<project_name>.default`
 
     example
     ------
-    >>> _package_name('TideCrawler/a/b/c.py')
+    >>> _package_name('<peoject_name>/a/b/c.py')
     'a.b.c'
     """
+    project_name = project_name if project_name else os.path.basename(
+        os.getcwd())
     path = path.replace('\\', '/')
     path = path[:path.rfind('.')]
     p = path.split('/')
