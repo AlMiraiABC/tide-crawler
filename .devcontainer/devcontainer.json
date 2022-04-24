@@ -32,7 +32,7 @@
 		"cssho.vscode-svgviewer",
 		"visualstudioexptteam.vscodeintellicode",
 		"ms-vscode.vs-keybindings",
-		"redhat.vscode-xml",
+		// "redhat.vscode-xml", // need java runtime
 		"redhat.vscode-yaml",
 		"ms-ceintl.vscode-language-pack-zh-hans",
 		"vivaxy.vscode-conventional-commits",
