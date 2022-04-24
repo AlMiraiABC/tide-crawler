@@ -8,7 +8,8 @@
         "service",
         "web",
         "cache",
-        "task"
+        "task",
+        "dev"
     ],
     "python.testing.unittestArgs": [
         "-v",

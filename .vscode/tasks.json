@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "unittest discover",
+            "command": "python",
+            "args": [
+                "-m",
+                "unittest",
+                "discover"
+            ],
+            "type": "shell"
+        },
+        {
+            "label": "unittest current file",
+            "command": "python",
+            "args": [
+                "-m",
+                "unittest",
+                "${file}"
+            ],
+            "type": "shell"
+        },
+        {
+            "label": "coverage",
+            "command": "python",
+            "args": [
+                "-m",
+                "coverage",
+                "run",
+                "-m",
+                "unittest",
+                "discover"
+            ],
+            "type": "shell"
+        }
+    ]
+}
