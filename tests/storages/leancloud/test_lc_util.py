@@ -16,7 +16,9 @@ import leancloud
 
 from utils.async_util import run_async
 
-
+"""
+These tests will connect to leancloud, must config the LCSetting.
+"""
 leancloud.init(LCSetting.APP_ID,
                LCSetting.APP_KEY if LCSetting.APP_KEY else LCSetting.MASTER_KEY)
 leancloud.User().login(LCSetting.USERNAME, LCSetting.PASSWORD)

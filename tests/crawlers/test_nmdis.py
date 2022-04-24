@@ -41,8 +41,6 @@ GET_MODEL = 'aiohttp.ClientSession.get'
 
 
 class TestNmdisAsync(IsolatedAsyncioTestCase):
-    """Get infos from nmdis to verify the links, do not mock requests."""
-
     def __init__(self, methodName: str = ...) -> None:
         super().__init__(methodName)
         self.nmdis = Nmdis()
