@@ -18,3 +18,22 @@ def async_wrap(func):
         pfunc = partial(func, *args, **kwargs)
         return await loop.run_in_executor(executor, pfunc)
     return run
+
+
+_ReturnType = TypeVar('_ReturnType')
+
+
+def run_async(coroutine: Coroutine[Any, Any, _ReturnType]) -> _ReturnType:
+    """
+    Run async in sync.
+
+    :param coroutine: A coroutine.
+    """
+    try:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coroutine)
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(coroutine)

@@ -22,7 +22,6 @@ class DbUtil(merge_meta(BaseDbUtil, Singleton)):
         else:
             self.db_util = LCUtil()
 
-
     async def open(self):
         return await self.db_util.open()
 

@@ -10,7 +10,7 @@ from storages.common import ExecState
 from storages.leancloud.lc_model import (LCArea, LCPort, LCProvince, LCTide,
                                          LCWithInfo)
 from storages.model import Area, Port, Province, Tide, WithInfo
-from utils.async_util import async_wrap
+from utils.async_util import async_wrap, run_async
 from utils.logger import Logger
 from utils.validate import Value
 
@@ -55,7 +55,7 @@ class LCUtil(BaseDbUtil):
         id = LCSetting.APP_ID
         key = LCSetting.APP_KEY if LCSetting.APP_KEY else LCSetting.MASTER_KEY
         leancloud.init(id, key)
-        asyncio.ensure_future(self.open())
+        run_async(self.open())
         # alias
         self.login = self.open
         self.logout = self.close
@@ -105,6 +105,8 @@ class LCUtil(BaseDbUtil):
     @_login()
     async def __get(self, obj: _ObjClazz, col: IDT, clazz: Type[_Clazz], rid_query: Callable[[], _Clazz] = None):
         """Wrapper for :fun:`__get_by_id` to get `objid` from :param:`obj`"""
+        if obj is None:
+            return ExecState.UN_EXIST, None
         return await self.__get_by_id(switch_idt(col, obj.objectId, obj.rid), col, clazz, rid_query)
 
     @_login()
@@ -341,7 +343,7 @@ class LCUtil(BaseDbUtil):
             raise ValueError('area or area.objectId cannot be none or empty.')
         q: Query = LCProvince.query
         try:
-            return await async_wrap(q.equal_to(LCProvince.AREA, LCArea.create_without_data(Area.objectId))
+            return await async_wrap(q.equal_to(LCProvince.AREA, LCArea.create_without_data(area.objectId))
                                     .find)()
         except Exception as ex:
             self.logger.error(f"get provinces by {area.objectId} failed. {ex}",

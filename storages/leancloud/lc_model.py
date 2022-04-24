@@ -7,7 +7,7 @@ https://leancloud.cn/docs/leanstorage_guide-python.html#hash23473483
 """
 
 import datetime
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Type, Union
 
 from storages.model import Area, BaseClazz, Port, Province, Tide, TideItem, TideItemDict, WithInfo
 
@@ -44,6 +44,16 @@ class LCBaseClazz(merge_meta(Object, BaseClazz)):
     @raw.setter
     def raw(self, data: Any):
         self.set(LCBaseClazz.RAW, data)
+
+    def get_rel(self, key: str, c: Type[Object]):
+        o: Object = self.get(key)
+        if isinstance(o, c):
+            return o
+        if o and o.id:
+            lco = c.query.get(o.id)
+            if lco.is_existed():
+                return lco
+        return None
 
 
 class LCWithInfo(LCBaseClazz, WithInfo):
@@ -82,7 +92,7 @@ class LCProvince(LCWithInfo, Province):
 
     @property
     def area(self) -> LCArea:
-        return self.get(LCProvince.AREA)
+        return self.get_rel(LCProvince.AREA, LCArea)
 
     @area.setter
     def area(self, area: LCArea):
@@ -100,7 +110,7 @@ class LCPort(LCWithInfo, Port):
 
     @property
     def province(self) -> LCProvince:
-        return self.get(LCPort.PROVINCE)
+        return self.get_rel(LCPort.PROVINCE, LCProvince)
 
     @province.setter
     def province(self, province: LCProvince):
@@ -160,7 +170,7 @@ class LCTide(LCBaseClazz, Tide):
 
     @property
     def port(self) -> LCPort:
-        return self.get(LCTide.PORT)
+        return self.get_rel(LCTide.PORT, LCPort)
 
     @port.setter
     def port(self, value: LCPort):
